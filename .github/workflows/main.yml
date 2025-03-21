@@ -1,0 +1,27 @@
+name: Docker Build & Push
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  DOCKER_IMAGE: praispranav/property-booking
+  DOCKER_TAG: latest
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        run: echo "Pushpalata@78" | docker login -u "praispranav" --password-stdin
+
+      - name: Build Docker image
+        run: docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+
+      - name: Push Docker image to Docker Hub
+        run: docker push $DOCKER_IMAGE:$DOCKER_TAG

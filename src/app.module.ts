@@ -8,6 +8,9 @@ import { PropertyModule } from './property/property/property.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DB } from './config/constants';
 import { CategoryModule } from './property/category/category.module';
+import { AmenitiesModule } from './property/amenities/amenities.module';
+import { ReviewsModule } from './property/reviews/reviews.module';
+import { PropertyTypesModule } from './property/property-types/property-types.module';
 
 @Module({
   imports: [
@@ -16,7 +19,10 @@ import { CategoryModule } from './property/category/category.module';
     BookingsModule,
     PromotionsModule,
     PropertyModule,
-    CategoryModule
+    CategoryModule,
+    AmenitiesModule,
+    ReviewsModule,
+    PropertyTypesModule
   ],
   controllers: [AppController],
   providers: [AppService],
