@@ -74,7 +74,6 @@ export class VerifyOtpDto {
   @IsNotEmpty()
   @IsNumber()
   @Min(6)
-  @Max(6)
   otp: string;
 }
 

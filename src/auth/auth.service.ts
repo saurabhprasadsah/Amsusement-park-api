@@ -11,11 +11,13 @@ import * as nodemailer from 'nodemailer';
 import { Auth, Status } from '../schemas/auth.schema';
 import {
   AUTH_TOKEN_KEY,
+  FORGET_JWT_KEY,
   JWT_ALGO,
   SESSION_TOKEN_KEY,
 } from 'src/config/constants';
 import { ChangePasswordDto } from './auth.dto';
 import { Role } from './role.enum';
+require('dotenv').config();
 
 @Injectable()
 export class AuthService {
@@ -82,7 +84,7 @@ export class AuthService {
     // Generate FORGET_JWT_KEY token
     const forgetJwtToken = this.jwtService.sign(
       { email },
-      { secret: process.env.FORGET_JWT_KEY, expiresIn: '15m' }, // Token expires in 15 minutes
+      { secret: FORGET_JWT_KEY, expiresIn: '15m' }, // Token expires in 15 minutes
     );
 
     // Send OTP to user's email
@@ -108,9 +110,9 @@ export class AuthService {
   // Verify OTP (and also verify FORGET_JWT_KEY token)
   async verifyOtp(email: string, otp: string, forgetJwtToken: string) {
     try {
-      // Verify the FORGET_JWT_KEY token
+      console.log('forgetJwtToken', forgetJwtToken);
       const decoded = this.jwtService.verify(forgetJwtToken, {
-        secret: process.env.FORGET_JWT_KEY,
+        secret: FORGET_JWT_KEY,
       });
 
       if (decoded.email !== email) {
@@ -123,12 +125,16 @@ export class AuthService {
       }
 
       const latestOtpEntry = user.otpInfo[user.otpInfo.length - 1];
-      if (!latestOtpEntry || latestOtpEntry.otp !== otp) {
+      console.log('latestOtpEntry', latestOtpEntry, otp);
+      if (!latestOtpEntry || latestOtpEntry.isVerified || latestOtpEntry.otp != otp) {
         throw new UnauthorizedException('Invalid OTP');
       }
+      user.otpInfo[user.otpInfo.length - 1].isVerified = true;
+      await user.save();
 
       return { message: 'OTP verified successfully', success: true };
     } catch (error) {
+      console.log('error', error);
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
@@ -151,6 +157,10 @@ export class AuthService {
     const user = await this.authModel.findOne({ email });
     if (!user) {
       throw new UnauthorizedException('User not found');
+    }
+
+    if(user.otpInfo[user.otpInfo.length - 1].isVerified === false){
+      throw new UnauthorizedException('OTP not verified');
     }
 
     const salt = await bcrypt.genSalt(15);

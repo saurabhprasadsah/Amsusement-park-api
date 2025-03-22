@@ -31,11 +31,7 @@ import { Auth, AuthSchema } from './schemas/auth.schema';
   ],
   controllers: [AppController],
   providers: [
-    AppService,
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
+    AppService
   ],
 })
 export class AppModule {}

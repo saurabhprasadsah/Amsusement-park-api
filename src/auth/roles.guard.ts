@@ -12,7 +12,8 @@ export class RolesGuard extends BaseGuard {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+      const request = context.switchToHttp().getRequest();
+      console.log("Request", request);
     const user = await this.validateRequest(request);
 
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [

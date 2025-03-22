@@ -38,8 +38,8 @@ export class Auth extends Document {
   @Prop({ type: String, required: true })
   password: string;
 
-  @Prop({ type: [{ timestamp: Date, otp: String }] })
-  otpInfo: { timestamp: Date; otp: string }[];
+  @Prop({ type: [{ timestamp: Date, otp: String, isVerified: Boolean }] })
+  otpInfo: { timestamp: Date; otp: string, isVerified?: boolean }[];
 
   @Prop({
     type: [

@@ -7,6 +7,7 @@ import { Role } from 'src/auth/role.enum';
 import { RolesGuard } from 'src/auth/roles.guard';
 
 @Controller('property')
+@UseGuards(RolesGuard)
 export class PropertyController {
     constructor(
         private readonly propertyService: PropertyService,
