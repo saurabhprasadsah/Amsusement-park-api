@@ -8,13 +8,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
-import { Auth } from './auth.schema';
+import { Auth, Status } from '../schemas/auth.schema';
 import {
   AUTH_TOKEN_KEY,
   JWT_ALGO,
   SESSION_TOKEN_KEY,
 } from 'src/config/constants';
 import { ChangePasswordDto } from './auth.dto';
+import { Role } from './role.enum';
 
 @Injectable()
 export class AuthService {
@@ -26,7 +27,10 @@ export class AuthService {
   async signup(userDto: any) {
     const salt = await bcrypt.genSalt(15);
     userDto.password = await bcrypt.hash(userDto.password, salt);
-    return this.authModel.create(userDto);
+    userDto.role = Role.User;
+    userDto.status = Status.Active;
+    await this.authModel.create(userDto);
+    return { success:true, message: 'User signup successful.' };  
   }
 
   async login(email: string, password: string) {
@@ -35,11 +39,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     const sessionToken = this.jwtService.sign(
-      { id: user._id, role: user.role },
+      { _id: user._id, role: user.role },
       { secret: SESSION_TOKEN_KEY, expiresIn: '3h' },
     );
     const authToken = this.jwtService.sign(
-      { id: user._id },
+      { _id: user._id },
       { secret: AUTH_TOKEN_KEY, expiresIn: '30d' },
     );
     return { sessionToken, authToken };
@@ -154,5 +158,14 @@ export class AuthService {
     await user.save();
 
     return { message: 'Password changed successfully' };
+  }
+
+  async checkUserInfo(userId:string, basicInfo:boolean){
+    if(basicInfo){
+      const result = await this.authModel.findById(userId).select('name email phone role description').lean();
+      return result;
+    }
+    const result = await this.authModel.findById(userId).lean();
+    return result;
   }
 }

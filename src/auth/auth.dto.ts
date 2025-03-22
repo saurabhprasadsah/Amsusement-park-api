@@ -24,8 +24,8 @@ export class SignupDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
-  phone: string;
+  @IsNumber()
+  phone: number;
 
   @ApiProperty()
   @IsNotEmpty()

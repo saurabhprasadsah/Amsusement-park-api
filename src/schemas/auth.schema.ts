@@ -1,11 +1,22 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { Role } from 'src/auth/role.enum';
+
+export enum Status {
+  Active = "Active",
+  Inactive = "Inactive",
+  Blocked = "Blocked",
+  Deleted = "Deleted",
+}
 
 export type AuthDocument = Auth & Document;
 @Schema()
 export class Auth extends Document {
   @Prop({ type: String, required: true })
   name: string;
+
+  @Prop({ type: String })
+  description: string;
 
   @Prop({ type: String, required: true, unique: true })
   email: string;
@@ -16,8 +27,13 @@ export class Auth extends Document {
   @Prop({ type: String })
   basicDescription: string;
 
-  @Prop({ type: String, required: true })
-  role: string;
+  @Prop({
+    type: String,
+    required: true,
+    default: Role.User,
+    enums: Object.values(Role),
+  })
+  role: Role;
 
   @Prop({ type: String, required: true })
   password: string;
@@ -60,6 +76,10 @@ export class Auth extends Document {
 
   @Prop({ type: [String] })
   likedProperties: string[];
+
+  @Prop({ type:String, enum: Status, default: Status.Active })
+  status: Status;
 }
+
 
 export const AuthSchema = SchemaFactory.createForClass(Auth);
