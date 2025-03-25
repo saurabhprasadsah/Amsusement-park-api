@@ -42,7 +42,7 @@ export class ContactInfo {
 }
 
 @Schema()
-export class GalleryItem {
+export class Image {
   @Prop({ required: true, type: Number })
   order: number;
 
@@ -101,14 +101,17 @@ export class Property {
   @Prop({ type: ContactInfo, required: true })
   contactInfo: ContactInfo;
 
-  @Prop({ type: [GalleryItem] })
-  gallery: GalleryItem[];
+  @Prop({ type: [Image] })
+  gallery: Image[];
 
   @Prop({ type: CoverPhotos, required: true })
   coverPhotos: CoverPhotos;
 
   @Prop({ required: false, type: String })
   hostedById: string; // Refers to user ID
+
+  @Prop({ required: true, type: [Image] })
+  thumbnailImage: Image[];
 
   @Prop({ type: [Price] })
   price: Price[]; // two price type ["perPeople", "perRoom", "perHour", "perDay",]

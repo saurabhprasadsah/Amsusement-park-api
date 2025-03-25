@@ -1,99 +1,116 @@
-import { IsOptional, IsString, IsInt, Min, IsObject, IsArray, ValidateNested, IsNumber } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsInt,
+  Min,
+  IsObject,
+  IsArray,
+  ValidateNested,
+  IsNumber,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class GetPropertyDto {
-    @Type(() => Number)
-    @IsInt()
-    @Min(1)
-    page: number = 1;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
 
-    @Type(() => Number)
-    @IsInt()
-    @Min(1)
-    limit: number = 10;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit: number = 10;
 
-    @IsOptional()
-    @IsString()
-    name?: string;
+  @IsOptional()
+  @IsString()
+  name?: string;
 
-    @IsOptional()
-    @IsString()
-    city?: string;
+  @IsOptional()
+  @IsString()
+  city?: string;
 
-    @IsOptional()
-    @IsString()
-    propertyType?: string;
+  @IsOptional()
+  @IsString()
+  propertyType?: string;
 }
 
 export class AddressDto {
-    @IsString()
-    fullAddress: string;
+  @IsString()
+  fullAddress: string;
 
-    @IsString()
-    city: string;
+  @IsString()
+  city: string;
 
-    @IsString()
-    state: string;
+  @IsString()
+  state: string;
 
-    @IsString()
-    mapLink: string;
+  @IsString()
+  mapLink: string;
 
-    @IsString()
-    @IsOptional()
-    landmark: string;
+  @IsString()
+  @IsOptional()
+  landmark: string;
 
-    @IsNumber()
-    @IsOptional()
-    lat: number
+  @IsNumber()
+  @IsOptional()
+  lat: number;
 
-    @IsNumber()
-    @IsOptional()
-    lng: number
+  @IsNumber()
+  @IsOptional()
+  lng: number;
+}
+
+class ImageDto {
+  @IsNumber()
+  order: number;
+
+  @IsString()
+  link: string;
 }
 
 export class CreatePropertyDto {
-    @IsString()
-    name: string;
+  @IsString()
+  name: string;
 
-    @IsString()
-    basicDescription: string;
+  @IsString()
+  basicDescription: string;
 
-    @IsString()
-    fullDescription: string;
+  @IsString()
+  fullDescription: string;
 
-    @IsString({ each: true })
-    amenities: string[];
+  @IsString({ each: true })
+  amenities: string[];
 
-    @IsString({ each: true })
-    @IsOptional()
-    additionalAmenities: string[];
+  @IsString({ each: true })
+  @IsOptional()
+  additionalAmenities: string[];
 
-    @IsString()
-    propertyType: string;
+  @IsString()
+  propertyType: string;
 
-    @IsString()
-    category: string;
+  @IsString()
+  category: string;
 
-    @ValidateNested()
-    @Type(() => AddressDto)
-    @IsObject()
-    address: AddressDto
+  @ValidateNested()
+  @Type(() => AddressDto)
+  @IsObject()
+  address: AddressDto;
 
-    @IsObject()
-    contactInfo: any
+  @IsObject()
+  contactInfo: any;
 
-    @IsArray()
-    gallery: any[]
+  @IsArray()
+  gallery: ImageDto[];
 
-    @IsObject()
-    coverPhotos: any
+  @IsArray()
+  thumbnailImage: ImageDto[];
 
-    @IsString()
-    hostedById: string;
+  @IsObject()
+  coverPhotos: any;
 
-    @IsArray()
-    price: any[]
+  @IsString()
+  hostedById: string;
 
+  @IsArray()
+  price: any[];
 }
-
-
