@@ -1,38 +1,51 @@
 import {
+  BadRequestException,
   HttpException,
+  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
-import { Auth, Status } from '../schemas/auth.schema';
+import { Auth, AuthDocument, OtpType, Status } from '../schemas/auth.schema';
 import {
   AUTH_TOKEN_KEY,
   FORGET_JWT_KEY,
   JWT_ALGO,
   SESSION_TOKEN_KEY,
 } from 'src/config/constants';
-import { ChangePasswordDto } from './auth.dto';
+import { ChangePasswordDto, SignupDto } from './auth.dto';
 import { Role } from './role.enum';
+import { MailService } from 'src/shared/mail.service';
+import { v4 as uuid } from 'uuid'
 require('dotenv').config();
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(Auth.name) private authModel: Model<Auth>,
+    @InjectModel(Auth.name) private authModel: Model<AuthDocument>,
     private jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
-  async signup(userDto: any) {
-    const salt = await bcrypt.genSalt(15);
-    userDto.password = await bcrypt.hash(userDto.password, salt);
-    userDto.role = Role.User;
-    userDto.status = Status.Active;
-    await this.authModel.create(userDto);
-    return { success:true, message: 'User signup successful.' };  
+  async signup(userDto: any, role: Role) {
+    try {
+      const user = await this.authModel.findOne({ email: userDto.email });
+      if (user) {
+        throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
+      }
+      const salt = await bcrypt.genSalt(15);
+      userDto.password = await bcrypt.hash(userDto.password, salt);
+      userDto.role = role;
+      userDto.status = Status.Active;
+      await this.authModel.create(userDto);
+      return { success: true, message: role + ' signup successful.' };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async login(email: string, password: string) {
@@ -41,11 +54,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     const sessionToken = this.jwtService.sign(
-      { _id: user._id, role: user.role },
+      { _id: user._id, role: user.role, isVerified: user.isVerified, email: user.email },
       { secret: SESSION_TOKEN_KEY, expiresIn: '3h' },
     );
     const authToken = this.jwtService.sign(
-      { _id: user._id },
+      { _id: user._id, isVerified: user.isVerified, role: user.role },
       { secret: AUTH_TOKEN_KEY, expiresIn: '30d' },
     );
     return { sessionToken, authToken };
@@ -70,47 +83,51 @@ export class AuthService {
     }
   }
 
-  async forgotPassword(email: string) {
-    const user = await this.authModel.findOne({ email });
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
-    // Generate OTP if not already generated
+  generateOtp() {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.otpInfo.push({ timestamp: new Date(), otp });
-    await user.save();
+    return otp;
+  }
 
-    // Generate FORGET_JWT_KEY token
-    const forgetJwtToken = this.jwtService.sign(
-      { email },
-      { secret: FORGET_JWT_KEY, expiresIn: '15m' }, // Token expires in 15 minutes
-    );
+  async throttleCheck(email: string, otpType: OtpType) {}
 
-    // Send OTP to user's email
+  async forgotPassword(email: string) {
     try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'your-email@gmail.com',
-          pass: 'your-email-password',
-        },
-      });
-      await transporter.sendMail({
-        from: 'your-email@gmail.com',
-        to: email,
-        subject: 'Password Reset OTP',
-        text: `Your OTP for password reset is: ${otp}`,
-      });
-    } catch (error) {}
+      const user = await this.authModel.findOne({ email });
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+      await this.throttleCheck(user.email, OtpType.ForgetPassword);
 
-    return { message: 'OTP sent successfully', forgetJwtToken }; // Return token to user
+      const otp = this.generateOtp();
+      user.otpInfo.push({
+        _id: new mongoose.Types.ObjectId(),
+        timestamp: new Date(),
+        otp,
+        otpType: OtpType.ForgetPassword,
+      });
+      await user.save();
+
+      const forgetJwtToken = this.jwtService.sign(
+        { email },
+        { secret: FORGET_JWT_KEY, expiresIn: '15m' },
+      );
+
+      try {
+        await this.mailService.sendOtpEmail(user.email, otp);
+      } catch (error) {
+        console.log(error);
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      }
+
+      return { message: 'OTP sent successfully', forgetJwtToken };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   // Verify OTP (and also verify FORGET_JWT_KEY token)
   async verifyOtp(email: string, otp: string, forgetJwtToken: string) {
     try {
-      console.log('forgetJwtToken', forgetJwtToken);
       const decoded = this.jwtService.verify(forgetJwtToken, {
         secret: FORGET_JWT_KEY,
       });
@@ -124,34 +141,51 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
       }
 
-      const latestOtpEntry = user.otpInfo[user.otpInfo.length - 1];
-      console.log('latestOtpEntry', latestOtpEntry, otp);
-      if (!latestOtpEntry || latestOtpEntry.isVerified || latestOtpEntry.otp != otp) {
-        throw new UnauthorizedException('Invalid OTP');
+      let latestOtpEntry: any[] = user.otpInfo.filter((i) => {
+        return i.otpType == OtpType.ForgetPassword;
+      });
+
+      if (latestOtpEntry.length === 0) {
+        throw new HttpException('Invalid OTP', HttpStatus.BAD_REQUEST);
       }
-      user.otpInfo[user.otpInfo.length - 1].isVerified = true;
+
+      const lastOtp = latestOtpEntry[latestOtpEntry.length - 1];
+      if (!lastOtp || lastOtp.isVerified || lastOtp.otp != otp) {
+        throw new HttpException('Invalid OTP', HttpStatus.BAD_REQUEST);
+      }
+      const otpIndex = user.otpInfo.findIndex((i)=> i._id === lastOtp._id)
+      user.otpInfo[otpIndex].isVerified = true;
       await user.save();
 
       return { message: 'OTP verified successfully', success: true };
     } catch (error) {
-      console.log('error', error);
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
 
   async changePassword(dto: ChangePasswordDto) {
-    const { email, newPassword, forgetJwtToken } = dto;
+    const { email, newPassword, token: forgetJwtToken } = dto;
+
+    let isDecoded1Verified = false;
+    let isDecoded2Verified = false;
 
     try {
-      const decoded = this.jwtService.verify(forgetJwtToken, {
-        secret: process.env.FORGET_JWT_KEY,
+      const decoded1 = this.jwtService.verify(forgetJwtToken, {
+        secret: FORGET_JWT_KEY,
       });
 
-      if (decoded.email !== email) {
-        throw new UnauthorizedException('Invalid token for this email');
-      }
-    } catch (error) {
-      throw new UnauthorizedException('Invalid or expired token');
+      if (decoded1.email === email) isDecoded1Verified = true;
+    } catch (error) {}
+
+    try {
+      const decoded2 = this.jwtService.verify(forgetJwtToken, {
+        secret: SESSION_TOKEN_KEY,
+      });
+      if (decoded2.email === email) isDecoded2Verified = true;
+    } catch (error) {}
+
+    if (!isDecoded1Verified && !isDecoded2Verified) {
+      throw new UnauthorizedException();
     }
 
     const user = await this.authModel.findOne({ email });
@@ -159,7 +193,7 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    if(user.otpInfo[user.otpInfo.length - 1].isVerified === false){
+    if (user.otpInfo[user.otpInfo.length - 1].isVerified === false) {
       throw new UnauthorizedException('OTP not verified');
     }
 
@@ -170,12 +204,72 @@ export class AuthService {
     return { message: 'Password changed successfully' };
   }
 
-  async checkUserInfo(userId:string, basicInfo:boolean){
-    if(basicInfo){
-      const result = await this.authModel.findById(userId).select('name email phone role description').lean();
+  async checkUserInfo(userId: string, basicInfo: boolean) {
+    if (basicInfo) {
+      const result = await this.authModel
+        .findById(userId)
+        .select('name email phone role description')
+        .lean();
       return result;
     }
     const result = await this.authModel.findById(userId).lean();
     return result;
+  }
+
+  async sendAccountVerificationOtp(userId: string) {
+    try {
+      const user = await this.authModel.findById(userId);
+      if (!user) throw new BadRequestException();
+      await this.throttleCheck(user.email, OtpType.VerifyAccount);
+
+      const otp = this.generateOtp();
+
+      user.otpInfo.push({
+        _id: new mongoose.Types.ObjectId(),
+        timestamp: new Date(),
+        otp,
+        otpType: OtpType.VerifyAccount,
+      });
+
+      await user.save();
+      
+      try {
+        await this.mailService.sendAccountVerificationEmail(user.email, otp);
+      } catch (error) {
+        console.log(error);
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      }
+      return { message: 'OTP sent successfully', success: true };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  async verifyAccount(userId: string, otp: string) {
+    const findUser = await this.authModel
+      .findById(userId)
+      .select('otpInfo')
+      .lean();
+
+    if (findUser) {
+
+      const otps = findUser.otpInfo.filter((i)=> i.otpType === OtpType.VerifyAccount);
+      const latestOtpEntry = otps[otps.length - 1];
+      if (
+        !latestOtpEntry ||
+        latestOtpEntry.isVerified ||
+        latestOtpEntry.otp != otp
+      ) {
+        throw new UnauthorizedException('Invalid OTP');
+      }
+      const otpIndex = findUser.otpInfo.findIndex((i)=> latestOtpEntry._id === i._id)
+
+      findUser.otpInfo[otpIndex].isVerified = true;
+
+      await this.authModel.findByIdAndUpdate(userId, {
+        otpInfo: findUser.otpInfo,
+      });
+      return { message: 'OTP verified successfully', success: true };
+    } else throw new BadRequestException();
   }
 }

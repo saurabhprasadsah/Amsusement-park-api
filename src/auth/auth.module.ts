@@ -1,14 +1,11 @@
 import { Module } from '@nestjs/common';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
 import { Auth, AuthSchema } from '../schemas/auth.schema';
-import * as bcrypt from 'bcrypt';
-import * as nodemailer from 'nodemailer';
-import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './auth.guard';
-import { RolesGuard } from './roles.guard';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+
+import { MailService } from 'src/shared/mail.service';
 
 @Module({
   imports: [
@@ -16,13 +13,6 @@ import { RolesGuard } from './roles.guard';
     JwtModule.register({}),
   ],
   controllers: [AuthController],
-  providers: [AuthService,
-    
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: AuthGuard,
-    // },
-  ],
-
+  providers: [AuthService, MailService],
 })
 export class AuthModule {}

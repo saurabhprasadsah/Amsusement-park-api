@@ -71,6 +71,7 @@ Property Schema
     - 
 - gallery:[{ order: number, link: string }]
 - coverPhotos: { display: 2 at once, 3 at once, 1 at once, data: [{ order, link }] }
+- thumbnailImage: { display: 2 at once, 3 at once, 1 at once, data: [{ order, link }] }
 - hostedById // mean user id
 - price: [] // according to type seat days etc
 
@@ -89,3 +90,39 @@ Auth Schema
 - searchTexts: [] // store texts as string
 - previouslyViewed: [] // store ids
 - likedProperties: [] // store ids
+
+
+Booking Schema
+
+
+
+
+
+// todays task
+
+Auth Api Structure
+
+Roles:
+- Vendor
+- User
+- Admin
+
+otpInfo will have otp type. can only generate 3 time in 1hour.
+
+Apis
+- login - common for all
+- signup
+- forget-password // resend we will use same just we will verify otp counts
+- verify-otp
+- change-password // this can be used with both after user login change password and forget password. just pass sessionToken as "token" and in case of forgetPassword pass "token"
+- signup-vendor
+    - Need to ask information that will be used for sign up
+- send-otp-email
+- verify-email
+
+------ Workflow ------
+- User sign up. 
+- User can login into account but before booking he needs to verify email.
+- for that /send-account-verification-mail will be used.
+- for verification of ot /verify-email will be used.
+- These both will require sessionToken as bearer token in header.

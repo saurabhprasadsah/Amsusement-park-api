@@ -7,13 +7,15 @@ import { BaseGuard } from './base.guard';
 
 @Injectable()
 export class RolesGuard extends BaseGuard {
-  constructor(private reflector: Reflector, jwtService: JwtService) {
+  constructor(
+    private reflector: Reflector,
+    jwtService: JwtService,
+  ) {
     super(jwtService);
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-      const request = context.switchToHttp().getRequest();
-      console.log("Request", request);
+    const request = context.switchToHttp().getRequest();
     const user = await this.validateRequest(request);
 
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [

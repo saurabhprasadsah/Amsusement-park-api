@@ -29,7 +29,17 @@ export class SignupDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @MinLength(6)
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8, { message: 'Password should be at least 8 characters long' })
+  @MaxLength(20, { message: 'Password should be at most 20 characters long' })
+  @Matches(
+    /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+    {
+      message:
+        'Password should contain at least one uppercase letter, one lowercase letter, one digit, and one special character',
+    },
+  )
   password: string;
 }
 
@@ -101,5 +111,15 @@ export class ChangePasswordDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  forgetJwtToken:string
+  token:string
+}
+
+
+export class VerifyAccountOtpDto {
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  @Min(5)
+  @Min(7)
+  otp:string
 }

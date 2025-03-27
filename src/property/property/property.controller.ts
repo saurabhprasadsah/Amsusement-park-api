@@ -15,12 +15,11 @@ export class PropertyController {
     ) {}
 
     @Post()
-    @Roles(Role.Admin)
+    @Roles(Role.User)
     async createProperty(
         @Body() property: CreatePropertyDto,
         @Req() req: any
     ) {
-        console.log("Controller", req.user)
         try{
             return this.propertyService.createProperty(property);
         } catch(err) {
