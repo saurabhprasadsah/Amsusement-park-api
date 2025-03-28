@@ -248,7 +248,6 @@ export class AuthService {
   async verifyAccount(userId: string, otp: string) {
     const findUser = await this.authModel
       .findById(userId)
-      .select('otpInfo')
       .lean();
 
     if (findUser) {
@@ -268,8 +267,19 @@ export class AuthService {
 
       await this.authModel.findByIdAndUpdate(userId, {
         otpInfo: findUser.otpInfo,
+        isVerified: true
       });
-      return { message: 'OTP verified successfully', success: true };
+
+      const sessionToken = this.jwtService.sign(
+        { _id: findUser._id, role: findUser.role, isVerified: findUser.isVerified, email: findUser.email },
+        { secret: SESSION_TOKEN_KEY, expiresIn: '3h' },
+      );
+      const authToken = this.jwtService.sign(
+        { _id: findUser._id, isVerified: findUser.isVerified, role: findUser.role },
+        { secret: AUTH_TOKEN_KEY, expiresIn: '30d' },
+      );
+
+      return { sessionToken,authToken, message: 'OTP verified successfully', success: true };
     } else throw new BadRequestException();
   }
 }
