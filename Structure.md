@@ -126,3 +126,47 @@ Apis
 - for that /send-account-verification-mail will be used.
 - for verification of ot /verify-email will be used.
 - These both will require sessionToken as bearer token in header.
+
+
+
+------------------------
+Additional Fields for Property
+
+Different Types of Property
+- water park
+- resort
+- villa
+- farmhouse
+- amusement park
+- banquet hall
+- hotel
+    - hall - for events
+    - room booking
+
+- openingHours
+
+
+Category
+
+
+Event(hotel)
+    - no of people - max 30 - above 30 just show request a callback
+    - include food - request callback
+    - include decoration - request callback
+    - duration - startTime and endTime we will ask
+
+Vila, farmhouse
+    - no of people
+    - no of days - startDate endDate
+    - no of rooms
+
+amusement park, water park
+    - no of people
+
+Stay(hotel)
+    - no of people
+    - no of rooms
+    - no of days - checkIn and checkOut date
+
+banquet hall
+    - just show request a callback
