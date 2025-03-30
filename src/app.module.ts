@@ -18,6 +18,7 @@ import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { MailService } from './shared/mail.service';
 import * as path from 'path';
 import { BookingModule } from './property/booking/booking.module';
+import { FileUploadModule } from './file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { BookingModule } from './property/booking/booking.module';
         },
       },
     }),
+    FileUploadModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService],
