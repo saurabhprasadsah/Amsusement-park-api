@@ -14,7 +14,7 @@ export class FileUploadController {
     // File upload endpoint
 
 
-    @Post('upload')
+    @Post('image')
     @UseInterceptors(
         FileInterceptor('file', {
             storage: diskStorage({
@@ -24,9 +24,21 @@ export class FileUploadController {
                     cb(null, filename);  // Save with timestamp
                 },
             }),
+            fileFilter: (req, file, cb) => {
+                // Allow only image files
+                const fileTypes = /jpeg|jpg|png|gif/;
+                const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
+                const mimetype = fileTypes.test(file.mimetype);
+
+                if (extname && mimetype) {
+                    return cb(null, true); // File is allowed
+                } else {
+                    return cb(new Error('Only image files are allowed!'), false); // Reject file
+                }
+            },
         })
     )
-    
+
     async uploadFile(@UploadedFile() file: Express.Multer.File) {
         if (!file) {
             return { message: 'No file uploaded' };
