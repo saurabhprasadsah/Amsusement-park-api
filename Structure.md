@@ -174,3 +174,16 @@ Event(banquet hall)
 
 ----------
 Starting With Water Park and Amusement Park Bookings
+
+Day Type Property Booking
+- StartDate
+- NoOfPeople
+- TotalAmount
+- PropertyId
+- HostedById
+- QRCodesIds
+
+Entry
+- time
+- type
+- qrCodeId

@@ -60,11 +60,12 @@ export class CoverPhotos {
 }
 
 export enum PricingTypes {
-  PER_PEOPLE = 'Per People',
-  PER_ROOM = 'Per Room',
-  PER_HOUR = 'Per Hour',
-  PER_DAY = 'Per Day',
-  CONTACT_SALES = "Contact Sales"
+  PER_PEOPLE = "PER_PEOPLE",
+  PER_ROOM = "PER_ROOM",
+  PER_HOUR = "PER_HOUR",
+  PER_DAY = "PER_DAY",
+  PER_CHILDREN = "PER_CHILDREN",
+  CONTACT_SALES = "CONTACT_SALES",
 }
 
 @Schema()
@@ -123,6 +124,9 @@ export class Property {
 
   @Prop({ type: [Price] })
   price: Price[]; // two price type ["perPeople", "perRoom", "perHour", "perDay",]
+
+  @Prop({ type: Boolean, default: true })
+  isActive: boolean = true;
 }
 
 export const PropertySchema = SchemaFactory.createForClass(Property);

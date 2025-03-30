@@ -35,6 +35,13 @@ export class PropertyController {
     ) {
         return this.propertyService.getProperty(query);
     }
+    
+    @Get(':id')
+    async getPropertyById(
+        @Param('id') id: string
+    ) {
+        return this.propertyService.getPropertyById(id);
+    }
 
     // below related property type
     @Post("property-types")
@@ -113,5 +120,23 @@ export class PropertyController {
         } catch (err) {
             throw new HttpException(err.message, 400);
         }
+    }
+
+    // Calculate Pricing
+    @Get('calculate-pricing')
+    async calculatePricing(
+        @Query('propertyId') propertyId: string,
+        @Query('noOfPeople') noOfPeople?: number,
+        @Query('noOfDays') noOfDays?: number,
+        @Query('noOfRooms') noOfRooms?: number,
+        @Query('noOfChildren') noOfChildren?: number,
+    ){
+        return this.propertyService.calculatePricing({
+            propertyId,
+            noOfPeople,
+            noOfDays,
+            noOfRooms,
+            noOfChildren
+        })
     }
 }

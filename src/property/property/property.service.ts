@@ -1,7 +1,7 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Property, PropertyDocument } from 'src/schemas/property.schema';
+import { PricingTypes, Property, PropertyDocument } from 'src/schemas/property.schema';
 import { CreatePropertyDto, GetPropertyDto } from './property.dto';
 import { PropertyType, PropertyTypeDocument } from 'src/schemas/property-type.schema';
 import { Category, CategoryDocument } from 'src/schemas/category.schema';
@@ -18,12 +18,12 @@ export class PropertyService {
     private readonly categorySchema: Model<CategoryDocument>,
     @InjectModel(City.name)
     private readonly citySchema: Model<CityDocument>
-  ) {}
+  ) { }
 
   async createProperty(property: CreatePropertyDto): Promise<Property> {
-    try{
+    try {
       return await this.propertySchema.create(property);
-    } catch(error){
+    } catch (error) {
       console.log(error);
       throw new HttpException(error.message, 400);
     }
@@ -43,6 +43,14 @@ export class PropertyService {
       .find(filter)
       .skip((page - 1) * limit)
       .limit(limit);
+  }
+
+  async getPropertyById(id: string): Promise<Property> {
+    const result = await this.propertySchema.findById(id);
+    if (!result) {
+      throw new HttpException('Property not found', 404);
+    }
+    return result
   }
 
   // below related property type
@@ -69,34 +77,53 @@ export class PropertyService {
   }
 
   // below related category type
-    async createCategory(category: any) {
-        try {
-        await this.categorySchema.create(category);
-        return { success: true, message: 'Category Added' };
-        } catch (err) {
-        throw new HttpException(err.message, 400);
-        }
+  async createCategory(category: any) {
+    try {
+      await this.categorySchema.create(category);
+      return { success: true, message: 'Category Added' };
+    } catch (err) {
+      throw new HttpException(err.message, 400);
+    }
+  }
+
+  async getCategories() {
+    return this.categorySchema.find();
+  }
+
+  async deleteCategory(id: string) {
+    await this.categorySchema.deleteOne({ _id: id });
+    return { success: true, message: 'Category Deleted' };
+  }
+
+  async getCities() {
+    return this.citySchema.find();
+  }
+
+  async addCity(city: string, state: string) {
+    try {
+      await this.citySchema.create({ city, state, isActive: true });
+      return { success: true, message: 'City Added' };
+    } catch (err) {
+      throw new HttpException(err.message, 400);
+    }
+  }
+
+  async calculatePricing(priceCalculation: any) {
+    const property = await this.propertySchema.findById(priceCalculation.propertyId);
+    if (!property) {
+      throw new HttpException('Property not found', 404);
     }
 
-    async getCategories() {
-        return this.categorySchema.find();
-    }
-
-    async deleteCategory(id: string) {
-        await this.categorySchema.deleteOne({ _id: id });
-        return { success: true, message: 'Category Deleted' };
-    }
-
-    async getCities() {
-      return this.citySchema.find();
-    }
-
-    async addCity(city: string, state: string) {
-      try {
-        await this.citySchema.create({ city, state, isActive: true });
-        return { success: true, message: 'City Added' };
-      } catch (err) {
-        throw new HttpException(err.message, 400);
+    let totalAmount = 0
+    property.price.map((price) => {
+      if (price.type === PricingTypes.PER_PEOPLE) {
+        totalAmount += price.amount * priceCalculation.noOfPeople;
       }
-    }
+
+      if(price.type === PricingTypes.PER_CHILDREN) {
+        totalAmount += price.amount * priceCalculation.noOfChildren;
+      }
+    });
+    return { totalAmount, propertyId: property._id };
+  }
 }
