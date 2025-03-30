@@ -149,18 +149,18 @@ Different Types of Property
 Category
 
 
-Event(hotel)
+Event(hotel, resort)
     - no of people - max 30 - above 30 just show request a callback
     - include food - request callback
     - include decoration - request callback
     - duration - startTime and endTime we will ask
 
-Vila, farmhouse
+Stay(Vila, farmhouse)
     - no of people
     - no of days - startDate endDate
     - no of rooms
 
-amusement park, water park
+Day(amusement park, water park)
     - no of people
 
 Stay(hotel)
@@ -168,5 +168,9 @@ Stay(hotel)
     - no of rooms
     - no of days - checkIn and checkOut date
 
-banquet hall
+Event(banquet hall)
     - just show request a callback
+
+
+----------
+Starting With Water Park and Amusement Park Bookings

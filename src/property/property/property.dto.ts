@@ -89,6 +89,7 @@ export class CreatePropertyDto {
   propertyType: string;
 
   @IsString()
+  @IsOptional()
   category: string;
 
   @ValidateNested()
@@ -109,6 +110,7 @@ export class CreatePropertyDto {
   coverPhotos: any;
 
   @IsString()
+  @IsOptional()
   hostedById: string;
 
   @IsArray()

@@ -3,10 +3,10 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class City extends Document {
-    @Prop({ required: true })
+    @Prop({ required: true, type: String })
     city: string;
 
-    @Prop({ required: true })
+    @Prop({ required: true, type: String })
     state: string;
 
     @Prop({ default: true, type: Boolean, defaultOptions: true })

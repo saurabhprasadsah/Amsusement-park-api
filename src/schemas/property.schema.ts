@@ -59,14 +59,22 @@ export class CoverPhotos {
   data: { order: number; link: string }[];
 }
 
+export enum PricingTypes {
+  PER_PEOPLE = 'Per People',
+  PER_ROOM = 'Per Room',
+  PER_HOUR = 'Per Hour',
+  PER_DAY = 'Per Day',
+  CONTACT_SALES = "Contact Sales"
+}
+
 @Schema()
 export class Price {
   @Prop({
     required: true,
     type: String,
-    enum: ['perPeople', 'perRoom', 'perHour', 'perDay'],
+    enum: Object.keys(PricingTypes),
   })
-  type: string; // ["perPeople", "perRoom", "perHour", "perDay",]
+  type: PricingTypes; // ["perPeople", "perRoom", "perHour", "perDay",]
 
   @Prop({ required: true, type: Number })
   amount: number;
@@ -92,7 +100,7 @@ export class Property {
   @Prop({ required: true, type: mongoose.Types.ObjectId })
   propertyType: PropertyType; // Refers to property type table
 
-  @Prop({ required: true, type: String })
+  @Prop({ required: false, type: String })
   category: string;
 
   @Prop({ type: [Address], required: true })

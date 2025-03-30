@@ -5,6 +5,7 @@ import { Property, PropertyDocument } from 'src/schemas/property.schema';
 import { CreatePropertyDto, GetPropertyDto } from './property.dto';
 import { PropertyType, PropertyTypeDocument } from 'src/schemas/property-type.schema';
 import { Category, CategoryDocument } from 'src/schemas/category.schema';
+import { City, CityDocument } from 'src/schemas/cities.schema';
 
 @Injectable()
 export class PropertyService {
@@ -14,14 +15,17 @@ export class PropertyService {
     @InjectModel(PropertyType.name)
     private readonly propertyTypeSchema: Model<PropertyTypeDocument>,
     @InjectModel(Category.name)
-    private readonly categorySchema: Model<CategoryDocument>
+    private readonly categorySchema: Model<CategoryDocument>,
+    @InjectModel(City.name)
+    private readonly citySchema: Model<CityDocument>
   ) {}
 
   async createProperty(property: CreatePropertyDto): Promise<Property> {
     try{
-        return await this.propertySchema.create(property);
+      return await this.propertySchema.create(property);
     } catch(error){
-        throw new HttpException(error.message, 400);
+      console.log(error);
+      throw new HttpException(error.message, 400);
     }
   }
 
@@ -83,4 +87,16 @@ export class PropertyService {
         return { success: true, message: 'Category Deleted' };
     }
 
+    async getCities() {
+      return this.citySchema.find();
+    }
+
+    async addCity(city: string, state: string) {
+      try {
+        await this.citySchema.create({ city, state, isActive: true });
+        return { success: true, message: 'City Added' };
+      } catch (err) {
+        throw new HttpException(err.message, 400);
+      }
+    }
 }

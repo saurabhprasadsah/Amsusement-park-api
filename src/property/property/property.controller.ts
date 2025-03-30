@@ -5,6 +5,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/auth/role.enum';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { PricingTypes } from 'src/schemas/property.schema';
 
 @Controller('property')
 @UseGuards(RolesGuard)
@@ -12,17 +13,18 @@ export class PropertyController {
     constructor(
         private readonly propertyService: PropertyService,
         private readonly propertyTypesService: PropertyService
-    ) {}
+    ) { }
 
     @Post()
-    @Roles(Role.User)
+    @Roles(Role.User, Role.Admin)
     async createProperty(
         @Body() property: CreatePropertyDto,
         @Req() req: any
     ) {
-        try{
+        try {
+            property.hostedById = req.user._id;
             return this.propertyService.createProperty(property);
-        } catch(err) {
+        } catch (err) {
             throw new HttpException(err.message, 400);
         }
     }
@@ -39,9 +41,9 @@ export class PropertyController {
     async createPropertyType(
         @Body() propertyType: any
     ) {
-        try{
+        try {
             return this.propertyTypesService.createPropertyType(propertyType);
-        } catch(err) {
+        } catch (err) {
             throw new HttpException(err.message, 400);
         }
     }
@@ -70,9 +72,9 @@ export class PropertyController {
     async createCategory(
         @Body() category: any
     ) {
-        try{
+        try {
             return this.propertyService.createCategory(category);
-        } catch(err) {
+        } catch (err) {
             throw new HttpException(err.message, 400);
         }
     }
@@ -89,4 +91,27 @@ export class PropertyController {
         return this.propertyService.deleteCategory(id);
     }
 
+    @Get('property-pricing-types')
+    getPropertyPricingTypes() {
+        return Object.entries(PricingTypes).map(([key, value]) => ({ key: key, value: value }))
+    }
+
+    // Cities
+    @Get('cities')
+    async getCities() {
+        return this.propertyService.getCities();
+    }
+
+    @Post('cities')
+    @Roles(Role.User, Role.Admin)
+    async addCity(
+        @Body('city') city: string,
+        @Body('state') state: string,
+    ) {
+        try {
+            return this.propertyService.addCity(city, state);
+        } catch (err) {
+            throw new HttpException(err.message, 400);
+        }
+    }
 }

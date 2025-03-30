@@ -11,6 +11,7 @@ import { Category, CategorySchema } from 'src/schemas/category.schema';
 import { AuthModule } from 'src/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { Auth, AuthSchema } from 'src/schemas/auth.schema';
+import { City, CitySchema } from 'src/schemas/cities.schema';
 
 @Module({
   imports: [
@@ -29,6 +30,10 @@ import { Auth, AuthSchema } from 'src/schemas/auth.schema';
         name: Category.name,
         schema: CategorySchema,
       },
+      {
+        name: City.name,
+        schema: CitySchema
+      }
     ]),
   ],
   controllers: [PropertyController],
