@@ -13,3 +13,7 @@ export const EMAIL_APP_PASSWORD = process.env.EMAIL_APP_PASSWORD;
 export const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
 export const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
 export const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
+
+export const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+export const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+export const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET;

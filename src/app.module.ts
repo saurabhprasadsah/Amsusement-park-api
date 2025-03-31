@@ -19,6 +19,7 @@ import { MailService } from './shared/mail.service';
 import * as path from 'path';
 import { BookingModule } from './property/booking/booking.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
+import { PaymentModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { FileUploadModule } from './file-upload/file-upload.module';
       },
     }),
     FileUploadModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService],
