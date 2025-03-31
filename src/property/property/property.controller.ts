@@ -22,6 +22,11 @@ export class PropertyController {
         // .map(([key, value]) => ({ key: key, value: value }))
     }
 
+    @Get("property-types")
+    async getPropertyTypes() {
+        return this.propertyTypesService.getPropertyTypes();
+    }
+
     @Post()
     @Roles(Role.User, Role.Admin)
     async createProperty(
@@ -60,11 +65,6 @@ export class PropertyController {
         } catch (err) {
             throw new HttpException(err.message, 400);
         }
-    }
-
-    @Get("property-types")
-    async getPropertyTypes() {
-        return this.propertyTypesService.getPropertyTypes();
     }
 
     @Get("property-types/:id")
