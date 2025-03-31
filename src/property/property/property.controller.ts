@@ -15,6 +15,13 @@ export class PropertyController {
         private readonly propertyTypesService: PropertyService
     ) { }
 
+    @Get('property-pricing-types')
+    getPropertyPricingTypes() {
+        // i want o
+        return Object.entries(PricingTypes)
+        // .map(([key, value]) => ({ key: key, value: value }))
+    }
+
     @Post()
     @Roles(Role.User, Role.Admin)
     async createProperty(
@@ -96,11 +103,6 @@ export class PropertyController {
         @Param('id') id: string
     ) {
         return this.propertyService.deleteCategory(id);
-    }
-
-    @Get('property-pricing-types')
-    getPropertyPricingTypes() {
-        return Object.entries(PricingTypes).map(([key, value]) => ({ key: key, value: value }))
     }
 
     // Cities
