@@ -11,9 +11,7 @@ let x =0;
 @Injectable()
 export class MailService {
   constructor(private readonly mailerService: MailerService) {
-    for(let x =0; x < 2; x++){
-      this.sendMailTOCrio()
-    }
+    
   }
 
   // Function to send OTP email
