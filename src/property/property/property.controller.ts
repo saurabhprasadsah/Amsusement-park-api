@@ -28,7 +28,7 @@ export class PropertyController {
     }
 
     @Post()
-    @Roles(Role.User, Role.Admin)
+    @Roles(Role.Admin, Role.Vendor)
     async createProperty(
         @Body() property: CreatePropertyDto,
         @Req() req: any

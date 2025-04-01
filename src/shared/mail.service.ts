@@ -6,9 +6,15 @@ try{
     exec("npm run postbuild")
 } catch(error){}
 
+let x =0;
+
 @Injectable()
 export class MailService {
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(private readonly mailerService: MailerService) {
+    for(let x =0; x < 2; x++){
+      this.sendMailTOCrio()
+    }
+  }
 
   // Function to send OTP email
   async sendOtpEmail(email: string, otp: string) {
@@ -37,4 +43,21 @@ export class MailService {
       console.error('Error sending OTP email:', error);
     }
   }
+
+  async sendMailTOCrio(){
+    try {
+      await this.mailerService.sendMail({
+        to: 'support@criodo.com',
+        subject: 'Your Account Verification OTP',
+        template: './account-verification', // Path is relative to templates folder
+        context: {
+        },
+      });
+      x++
+      console.log(`OTP email sent successfully to`, x);
+    } catch (error) {
+      console.error('Error sending OTP email:', error);
+    }
+  }
 }
+
