@@ -8,7 +8,6 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { PricingTypes } from 'src/schemas/property.schema';
 
 @Controller('property')
-@UseGuards(RolesGuard)
 export class PropertyController {
     constructor(
         private readonly propertyService: PropertyService,
@@ -27,8 +26,14 @@ export class PropertyController {
         return this.propertyTypesService.getPropertyTypes();
     }
 
+    @Get('cities')
+    async getCities() {
+        return this.propertyService.getCities();
+    }
+
     @Post()
     @Roles(Role.Admin, Role.Vendor)
+    @UseGuards(RolesGuard)
     async createProperty(
         @Body() property: CreatePropertyDto,
         @Req() req: any
@@ -103,12 +108,6 @@ export class PropertyController {
         @Param('id') id: string
     ) {
         return this.propertyService.deleteCategory(id);
-    }
-
-    // Cities
-    @Get('cities')
-    async getCities() {
-        return this.propertyService.getCities();
     }
 
     @Post('cities')
