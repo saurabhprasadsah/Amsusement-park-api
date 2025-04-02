@@ -68,6 +68,12 @@ export enum PricingTypes {
   CONTACT_SALES = "CONTACT_SALES",
 }
 
+export enum DiscountContains {
+  NORMAL = "Normal",
+  PER_PEOPLE = "PER_PEOPLE",
+  PER_CHILDREN = "PER_CHILDREN",
+}
+
 export enum DiscountRules {
   GREATER_THAN = "greaterThan",
   LESS_THAN = "lessThan",
@@ -142,8 +148,14 @@ export class Property {
     rule: DiscountRules;
     amountInPercent: number;
     quantity: number;
-    contains: PricingTypes[];
+    contains: DiscountContains[];
   }[];
+
+  @Prop({ type: { startDate: Date, endDate: Date } })
+  availability: {
+    startDate: Date;
+    endDate: Date;
+  };
 }
 
 export const PropertySchema = SchemaFactory.createForClass(Property);

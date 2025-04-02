@@ -118,4 +118,10 @@ export class CreatePropertyDto {
 
   @IsArray()
   discount: any[];
+
+  @IsObject()
+  availability: {
+    startDate: string;
+    endDate: string;
+  };
 }

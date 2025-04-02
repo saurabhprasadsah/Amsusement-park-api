@@ -1,7 +1,7 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { PricingTypes, Property, PropertyDocument } from 'src/schemas/property.schema';
+import { DiscountContains, PricingTypes, Property, PropertyDocument } from 'src/schemas/property.schema';
 import { CreatePropertyDto, GetPropertyDto } from './property.dto';
 import { PropertyType, PropertyTypeDocument } from 'src/schemas/property-type.schema';
 import { Category, CategoryDocument } from 'src/schemas/category.schema';
@@ -117,15 +117,15 @@ export class PropertyService {
     console.log(property.discount, )
     let totalAmount = 0;
 
-    const findDiscount = (contains: PricingTypes) => property.discount.find((discount) => {
-      return discount.contains.includes(contains)
+    const findDiscount = (contains: DiscountContains) => property.discount.find((discount) => {
+      return discount.contains.includes((contains) as any)
     })
 
     property.price.map((price) => {
       if (price.type === PricingTypes.PER_PEOPLE && priceCalculation.noOfPeople > 0) {
         let temp = 0
         temp += price.amount * priceCalculation.noOfPeople;
-        const discount = findDiscount(PricingTypes.PER_PEOPLE)
+        const discount = findDiscount(DiscountContains.PER_PEOPLE)
         if (discount) {
           temp -= (totalAmount * discount.amountInPercent) / 100
         }
@@ -135,7 +135,7 @@ export class PropertyService {
       if(price.type === PricingTypes.PER_CHILDREN && priceCalculation.noOfChildren > 0) {
         let temp = 0
         temp += price.amount * priceCalculation.noOfChildren;
-        const discount = findDiscount(PricingTypes.PER_CHILDREN)
+        const discount = findDiscount(DiscountContains.PER_CHILDREN)
         if (discount) {
           temp -= (totalAmount * discount.amountInPercent) / 100
         }
@@ -143,6 +143,10 @@ export class PropertyService {
       }
     });
 
+    const normalDiscounts = findDiscount(DiscountContains.NORMAL);
+    if(normalDiscounts) {
+      totalAmount -= (totalAmount * normalDiscounts.amountInPercent) / 100
+    }
 
     return { totalAmount, propertyId: property._id };
   }
