@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { Role } from 'src/auth/role.enum';
 import { Booking, BookingDocument, BookingStatus } from 'src/schemas/booking.schema';
 import { PropertyType, PropertyTypeDocument } from 'src/schemas/property-type.schema';
-import { PricingTypes, Property, PropertyDocument } from 'src/schemas/property.schema';
+import { DiscountContains, PricingTypes, Property, PropertyDocument } from 'src/schemas/property.schema';
 
 @Injectable()
 export class BookingService {
@@ -17,22 +17,46 @@ export class BookingService {
         // private readonly propertyTypeSchema: Model<PropertyTypeDocument>,
     ) { }
 
-    async calculateTotalAmount(priceCalculation) {
-        const property = await this.propertySchema.findById(priceCalculation.propertyId).lean();
+    async calculateTotalAmount(priceCalculation: any) {
+        const property = await this.propertySchema.findById(priceCalculation.propertyId);
         if (!property) {
             throw new HttpException('Property not found', 404);
         }
 
-        let totalAmount = 0
+        console.log(property.discount,)
+        let totalAmount = 0;
+
+        const findDiscount = (contains: DiscountContains) => property.discount.find((discount) => {
+            return discount.contains.includes((contains) as any)
+        })
+
         property.price.map((price) => {
-            if (price.type === PricingTypes.PER_PEOPLE) {
-                totalAmount += price.amount * priceCalculation.noOfPeople;
+            if (price.type === PricingTypes.PER_PEOPLE && priceCalculation.noOfPeople > 0) {
+                let temp = 0
+                temp += price.amount * priceCalculation.noOfPeople;
+                const discount = findDiscount(DiscountContains.PER_PEOPLE)
+                if (discount) {
+                    temp -= (totalAmount * discount.amountInPercent) / 100
+                }
+                totalAmount += temp
             }
 
-            if (price.type === PricingTypes.PER_CHILDREN) {
-                totalAmount += price.amount * priceCalculation.noOfChildren;
+            if (price.type === PricingTypes.PER_CHILDREN && priceCalculation.noOfChildren > 0) {
+                let temp = 0
+                temp += price.amount * priceCalculation.noOfChildren;
+                const discount = findDiscount(DiscountContains.PER_CHILDREN)
+                if (discount) {
+                    temp -= (totalAmount * discount.amountInPercent) / 100
+                }
+                totalAmount += temp
             }
         });
+
+        const normalDiscounts = findDiscount(DiscountContains.NORMAL);
+        if (normalDiscounts) {
+            totalAmount -= (totalAmount * normalDiscounts.amountInPercent) / 100
+        }
+
         return { totalAmount, propertyId: property._id, property };
     }
 
