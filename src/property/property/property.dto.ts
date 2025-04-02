@@ -115,4 +115,7 @@ export class CreatePropertyDto {
 
   @IsArray()
   price: any[];
+
+  @IsArray()
+  discount: any[];
 }

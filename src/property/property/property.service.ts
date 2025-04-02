@@ -114,16 +114,36 @@ export class PropertyService {
       throw new HttpException('Property not found', 404);
     }
 
-    let totalAmount = 0
+    console.log(property.discount, )
+    let totalAmount = 0;
+
+    const findDiscount = (contains: PricingTypes) => property.discount.find((discount) => {
+      return discount.contains.includes(contains)
+    })
+
     property.price.map((price) => {
-      if (price.type === PricingTypes.PER_PEOPLE) {
-        totalAmount += price.amount * priceCalculation.noOfPeople;
+      if (price.type === PricingTypes.PER_PEOPLE && priceCalculation.noOfPeople > 0) {
+        let temp = 0
+        temp += price.amount * priceCalculation.noOfPeople;
+        const discount = findDiscount(PricingTypes.PER_PEOPLE)
+        if (discount) {
+          temp -= (totalAmount * discount.amountInPercent) / 100
+        }
+        totalAmount += temp
       }
 
-      if(price.type === PricingTypes.PER_CHILDREN) {
-        totalAmount += price.amount * priceCalculation.noOfChildren;
+      if(price.type === PricingTypes.PER_CHILDREN && priceCalculation.noOfChildren > 0) {
+        let temp = 0
+        temp += price.amount * priceCalculation.noOfChildren;
+        const discount = findDiscount(PricingTypes.PER_CHILDREN)
+        if (discount) {
+          temp -= (totalAmount * discount.amountInPercent) / 100
+        }
+        totalAmount += temp
       }
     });
+
+
     return { totalAmount, propertyId: property._id };
   }
 }

@@ -68,6 +68,11 @@ export enum PricingTypes {
   CONTACT_SALES = "CONTACT_SALES",
 }
 
+export enum DiscountRules {
+  GREATER_THAN = "greaterThan",
+  LESS_THAN = "lessThan",
+}
+
 @Schema()
 export class Price {
   @Prop({
@@ -127,6 +132,18 @@ export class Property {
 
   @Prop({ type: Boolean, default: true })
   isActive: boolean = true;
+
+  @Prop({
+    type: [{ rule: String, amountInPercent: Number, quantity: Number, contains: [String] }],
+    required: false,
+    default: [],
+  })
+  discount: {
+    rule: DiscountRules;
+    amountInPercent: number;
+    quantity: number;
+    contains: PricingTypes[];
+  }[];
 }
 
 export const PropertySchema = SchemaFactory.createForClass(Property);

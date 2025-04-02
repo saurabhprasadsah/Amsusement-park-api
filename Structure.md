@@ -187,3 +187,21 @@ Entry
 - time
 - type
 - qrCodeId
+
+
+Discount
+
+- Per Person
+- Per Children
+
+- Combined - [ Per Person, Per Children ]
+- amountInPercent
+- rule: more than 2
+- rule: more than 5
+- quantity
+
+schema
+- amountINPercent: number
+- rule: "greaterThan" enum
+- Quantity: number
+- contains: array

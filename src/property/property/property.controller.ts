@@ -5,7 +5,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/auth/role.enum';
 import { RolesGuard } from 'src/auth/roles.guard';
-import { PricingTypes } from 'src/schemas/property.schema';
+import { DiscountRules, PricingTypes } from 'src/schemas/property.schema';
 
 @Controller('property')
 export class PropertyController {
@@ -52,13 +52,29 @@ export class PropertyController {
     ) {
         return this.propertyService.getProperty(query);
     }
-    
-    @Get(':id')
-    async getPropertyById(
-        @Param('id') id: string
-    ) {
-        return this.propertyService.getPropertyById(id);
+
+    @Get('discount-rules')
+    getDiscountRules() {
+        return Object.entries(DiscountRules)
     }
+
+    @Get('calculate-pricing')
+    async calculatePricing(
+        @Query('propertyId') propertyId: string,
+        @Query('noOfPeople') noOfPeople?: number,
+        @Query('noOfDays') noOfDays?: number,
+        @Query('noOfRooms') noOfRooms?: number,
+        @Query('noOfChildren') noOfChildren?: number,
+    ){
+        return this.propertyService.calculatePricing({
+            propertyId,
+            noOfPeople,
+            noOfDays,
+            noOfRooms,
+            noOfChildren
+        })
+    }
+
 
     // below related property type
     @Post("property-types")
@@ -123,21 +139,10 @@ export class PropertyController {
         }
     }
 
-    // Calculate Pricing
-    @Get('calculate-pricing')
-    async calculatePricing(
-        @Query('propertyId') propertyId: string,
-        @Query('noOfPeople') noOfPeople?: number,
-        @Query('noOfDays') noOfDays?: number,
-        @Query('noOfRooms') noOfRooms?: number,
-        @Query('noOfChildren') noOfChildren?: number,
-    ){
-        return this.propertyService.calculatePricing({
-            propertyId,
-            noOfPeople,
-            noOfDays,
-            noOfRooms,
-            noOfChildren
-        })
+    @Get(':id')
+    async getPropertyById(
+        @Param('id') id: string
+    ) {
+        return this.propertyService.getPropertyById(id);
     }
 }
