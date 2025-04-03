@@ -23,7 +23,9 @@ export class PropertyController {
 
     @Get('property-discount-contains')
     getPropertyDiscountCOntains() {
-        return Object.entries(DiscountContains)
+        return Object.entries(DiscountContains).filter(([key, value]) => {
+            return key !== 'NORMAL'
+        })
     }
 
     @Get("property-types")
