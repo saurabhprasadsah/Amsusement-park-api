@@ -5,7 +5,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/auth/role.enum';
 import { RolesGuard } from 'src/auth/roles.guard';
-import { DiscountRules, PricingTypes } from 'src/schemas/property.schema';
+import { DiscountContains, DiscountRules, PricingTypes } from 'src/schemas/property.schema';
 
 @Controller('property')
 export class PropertyController {
@@ -19,6 +19,11 @@ export class PropertyController {
         // i want o
         return Object.entries(PricingTypes)
         // .map(([key, value]) => ({ key: key, value: value }))
+    }
+
+    @Get('property-discount-contains')
+    getPropertyDiscountCOntains() {
+        return Object.entries(DiscountContains)
     }
 
     @Get("property-types")
