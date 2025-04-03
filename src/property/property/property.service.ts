@@ -31,13 +31,18 @@ export class PropertyService {
 
   async getProperty(query: GetPropertyDto): Promise<Property[]> {
     const { page = 1, limit = 10, name, city, propertyType } = query;
-    const filter = {
-      ...(name && { name: { $regex: name, $options: 'i' } }),
-      ...(city && { city: { $regex: city, $options: 'i' } }),
-      ...(propertyType && {
-        propertyType: { $regex: propertyType, $options: 'i' },
-      }),
-    };
+
+    const filter:any = {
+      $or: [
+
+      ],
+    }
+    if (name) filter['$or'].push({ name: { $regex: (name || ''), $options: 'i' } })
+    if (city) filter['$or'].push({ city: { $regex: (city || ''), $options: 'i' } })
+    // { city: { $regex: (city || ''), $options: 'i' } },
+    if (propertyType) filter['propertyType'] = propertyType
+
+    console.log(city, name, propertyType);
 
     return this.propertySchema
       .find(filter)
@@ -114,7 +119,7 @@ export class PropertyService {
       throw new HttpException('Property not found', 404);
     }
 
-    console.log(property.discount, )
+    console.log(property.discount,)
     let totalAmount = 0;
 
     const findDiscount = (contains: DiscountContains) => property.discount.find((discount) => {
@@ -132,7 +137,7 @@ export class PropertyService {
         totalAmount += temp
       }
 
-      if(price.type === PricingTypes.PER_CHILDREN && priceCalculation.noOfChildren > 0) {
+      if (price.type === PricingTypes.PER_CHILDREN && priceCalculation.noOfChildren > 0) {
         let temp = 0
         temp += price.amount * priceCalculation.noOfChildren;
         const discount = findDiscount(DiscountContains.PER_CHILDREN)
@@ -144,7 +149,7 @@ export class PropertyService {
     });
 
     const normalDiscounts = findDiscount(DiscountContains.NORMAL);
-    if(normalDiscounts) {
+    if (normalDiscounts) {
       totalAmount -= (totalAmount * normalDiscounts.amountInPercent) / 100
     }
 
