@@ -69,7 +69,6 @@ export enum PricingTypes {
 }
 
 export enum DiscountContains {
-  NORMAL = "Normal",
   PER_PEOPLE = "PER_PEOPLE",
   PER_CHILDREN = "PER_CHILDREN",
 }
