@@ -36,6 +36,7 @@ export class PropertyService {
       $or: [
 
       ],
+      isActive: true,
     }
     if (name) filter['$or'].push({ name: { $regex: (name || ''), $options: 'i' } })
     if (city) filter['$or'].push({ city: { $regex: (city || ''), $options: 'i' } })
@@ -111,6 +112,22 @@ export class PropertyService {
     } catch (err) {
       throw new HttpException(err.message, 400);
     }
+  }
+
+  async getMyProperties(name:string, page:number= 1, limit: number = 10, userId:string) {
+    const filter = {
+      hostedById: userId,
+    };
+    if(name)  filter['name'] = { $regex: (name || ''), $options: 'i' }
+    return this.propertySchema.find(filter).skip((page - 1) * limit).limit(limit);
+  }
+
+  async updateProperty(id:string, property, hostedById:string) {
+    const result = await this.propertySchema.findOneAndUpdate({ _id: id, hostedById }, { ...property }, { new: true });
+    if (!result) {
+      throw new HttpException('Property not found', 404);
+    }
+    return result;
   }
 
   async calculatePricing(priceCalculation: any) {

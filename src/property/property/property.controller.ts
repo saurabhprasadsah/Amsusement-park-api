@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpException, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto, GetPropertyDto } from './property.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -36,6 +36,33 @@ export class PropertyController {
     @Get('cities')
     async getCities() {
         return this.propertyService.getCities();
+    }
+
+    @Get('my-properties')
+    @UseGuards(RolesGuard)
+    @Roles(Role.Vendor)
+    async getMyProperties(
+        @Query('name') name: string,
+        @Req() req: any,
+        @Query('page') page?: number,
+        @Query('limit') limit?: number,
+    ){
+        return this.propertyService.getMyProperties(name, page, limit, req.user._id);
+    }
+
+    @Patch()
+    @UseGuards(RolesGuard)
+    @Roles(Role.Vendor)
+    async updateProperty(
+        @Body() property: CreatePropertyDto,
+        @Query('_id') _id: string,
+        @Req() req: any
+    ) {
+        try {
+            return this.propertyService.updateProperty(_id, property, req.user._id);
+        } catch (err) {
+            throw new HttpException(err.message, 400);
+        }
     }
 
     @Post()
