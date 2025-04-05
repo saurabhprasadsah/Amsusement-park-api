@@ -141,7 +141,7 @@ export class Property {
   isActive: boolean = true;
 
   @Prop({
-    type: [{ rule: String, amountInPercent: Number, quantity: Number, contains: [String] }],
+    type: [{ rule: String, label: String, amountInPercent: Number, quantity: Number, contains: [String] }],
     required: false,
     default: [],
   })
@@ -149,6 +149,7 @@ export class Property {
     rule: DiscountRules;
     amountInPercent: number;
     quantity: number;
+    label?: string
     contains: DiscountContains[];
   }[];
 

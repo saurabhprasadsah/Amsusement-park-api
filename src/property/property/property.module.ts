@@ -12,6 +12,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { Auth, AuthSchema } from 'src/schemas/auth.schema';
 import { City, CitySchema } from 'src/schemas/cities.schema';
+import { DiscountCalculatorService } from 'src/shared/discount-calculator.service';
 
 @Module({
   imports: [
@@ -37,6 +38,6 @@ import { City, CitySchema } from 'src/schemas/cities.schema';
     ]),
   ],
   controllers: [PropertyController],
-  providers: [PropertyService],
+  providers: [PropertyService, DiscountCalculatorService],
 })
 export class PropertyModule {}

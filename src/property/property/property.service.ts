@@ -15,6 +15,7 @@ import {
 } from 'src/schemas/property-type.schema';
 import { Category, CategoryDocument } from 'src/schemas/category.schema';
 import { City, CityDocument } from 'src/schemas/cities.schema';
+import { DiscountCalculatorService } from 'src/shared/discount-calculator.service';
 
 @Injectable()
 export class PropertyService {
@@ -27,6 +28,7 @@ export class PropertyService {
     private readonly categorySchema: Model<CategoryDocument>,
     @InjectModel(City.name)
     private readonly citySchema: Model<CityDocument>,
+    private discountCalculatorService: DiscountCalculatorService,
   ) {}
 
   async createProperty(property: CreatePropertyDto): Promise<Property> {
@@ -43,18 +45,75 @@ export class PropertyService {
 
     const filter: any = {
       $or: [
-        { name: { $regex: search || '', $options: 'i' }},
-        { "address.city": { $regex: search || '', $options: 'i' }},
-        { "address.state": { $regex: search || '', $options: 'i' }},
+        { name: { $regex: search || '', $options: 'i' } },
+        { 'address.city': { $regex: search || '', $options: 'i' } },
+        { 'address.state': { $regex: search || '', $options: 'i' } },
       ],
       isActive: true,
     };
 
     if (propertyType) filter['propertyType'] = propertyType;
-    return this.propertySchema
+
+    const result = await this.propertySchema
       .find(filter)
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .lean();
+
+    // result.map((property) => {
+    //   let visibleAmount = {
+    //     originalAmount: 0,
+    //     discountedAmount: 0,
+    //   }
+
+    //   let temp = {
+    //     perPersonAmount: 0,
+    //     perChildrenAmount: 0,
+    //     normalChildrenDiscount: 0,
+    //     normalPersonDiscount: 0
+    //   }
+
+    //   const findPrice = (pricingType) => property.price.find((price) => price.type === pricingType)
+
+    //   temp.perPersonAmount = this.discountCalculatorService.calculatePersonDiscount({
+    //     price: findPrice(PricingTypes.PER_PEOPLE),
+    //     noOfPeople: 1,
+    //     property,
+    //   })
+    //   temp.perChildrenAmount = this.discountCalculatorService.calculateChildrenDiscount({
+    //     price: findPrice(PricingTypes.PER_CHILDREN),
+    //     noOfChildren: 1,
+    //     property,
+    //   })
+
+    //   const isNormal = this.discountCalculatorService.findDiscount(DiscountContains.NORMAL, property)
+    //   if (isNormal && property.discount.length) {
+    //     const lowestAmount = Math.min(temp.perPersonAmount, temp.perChildrenAmount)
+    //     visibleAmount.originalAmount = lowestAmount
+    //     visibleAmount.discountedAmount = lowestAmount - (lowestAmount * isNormal.amountInPercent) / 100
+    //   } else if (property.discount.length){
+    //     const lowestAmount = Math.min(temp.perPersonAmount, temp.perChildrenAmount)
+    //     visibleAmount.originalAmount = lowestAmount
+
+    //   }
+
+    //   temp.normalPersonDiscount = this.discountCalculatorService.calculateNormalDiscount({
+    //     property,
+    //     totalAmount: temp.perPersonAmount
+    //   })
+    //   temp.normalChildrenDiscount = this.discountCalculatorService.calculateNormalDiscount({
+    //     property,
+    //     totalAmount: temp.perChildrenAmount
+    //   })
+
+    //   const lowestAmount = Math.min(temp.perPersonAmount, temp.perChildrenAmount, temp.normalDiscount)
+    //   visibleAmount.originalAmount = lowestAmount
+    //   visibleAmount.discountedAmount = lowestAmount - temp.normalDiscount
+    //   property.visibleAmount = visibleAmount
+
+    // })
+
+    return result;
   }
 
   async getPropertyById(id: string): Promise<Property> {
@@ -157,45 +216,54 @@ export class PropertyService {
     }
 
     let totalAmount = 0;
-
-    const findDiscount = (contains: DiscountContains) =>
-      property.discount.find((discount) => {
-        return discount.contains.includes(contains as any);
-      });
+    let originalAmount = 0;
+    const offers = [];
+    const priceBreakup: any[] = [];
 
     property.price.map((price) => {
       if (
         price.type === PricingTypes.PER_PEOPLE &&
         priceCalculation.noOfPeople > 0
       ) {
-        let temp = 0;
-        temp += price.amount * priceCalculation.noOfPeople;
-        const discount = findDiscount(DiscountContains.PER_PEOPLE);
-        if (discount && DiscountRules.GREATER_THAN) {
-          temp -= (totalAmount * discount.amountInPercent) / 100;
-        }
-        totalAmount += temp;
+        const p = this.discountCalculatorService.calculatePersonDiscount({
+          price,
+          noOfPeople: priceCalculation.noOfPeople,
+          property,
+        });
+        totalAmount += p.discountedAmount;
+        originalAmount += p.originalAmount;
+        priceBreakup.push({
+          originalAmount: p.originalAmount,
+          discountedAmount: p.discountedAmount,
+          pricing: priceCalculation.noOfPeople + ' People',
+        });
       }
 
       if (
         price.type === PricingTypes.PER_CHILDREN &&
         priceCalculation.noOfChildren > 0
       ) {
-        let temp = 0;
-        temp += price.amount * priceCalculation.noOfChildren;
-        const discount = findDiscount(DiscountContains.PER_CHILDREN);
-        if (discount && DiscountRules.GREATER_THAN) {
-          temp -= (totalAmount * discount.amountInPercent) / 100;
-        }
-        totalAmount += temp;
+        const p = this.discountCalculatorService.calculateChildrenDiscount({
+          price,
+          noOfChildren: priceCalculation.noOfChildren,
+          property,
+        });
+        totalAmount += p.discountedAmount;
+        originalAmount += p.originalAmount;
+        priceBreakup.push({
+          originalAmount: p.originalAmount,
+          discountedAmount: p.discountedAmount,
+          pricing: priceCalculation.noOfChildren + ' Children',
+        });
       }
     });
 
-    const normalDiscounts = findDiscount(DiscountContains.NORMAL);
-    if (normalDiscounts && DiscountRules.GREATER_THAN) {
-      totalAmount -= (totalAmount * normalDiscounts.amountInPercent) / 100;
-    }
-
-    return { totalAmount, propertyId: property._id };
+    return {
+      offersApplied: offers,
+      discountedAmount: totalAmount,
+      priceBreakup,
+      originalAmount,
+      propertyId: property._id,
+    };
   }
 }
