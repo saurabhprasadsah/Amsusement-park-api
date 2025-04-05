@@ -72,7 +72,7 @@ export class PropertyService {
           });
           visiblePrice.push({
             actualAmount: p.originalAmount,
-            discountedAmount: p.discountedAmount,
+            discountedAmount: p.discountedAmount === 0 ? p.originalAmount : p.discountedAmount,
           });
         }
 
@@ -84,7 +84,7 @@ export class PropertyService {
           });
           visiblePrice.push({
             actualAmount: p.originalAmount,
-            discountedAmount: p.discountedAmount,
+            discountedAmount: p.discountedAmount === 0 ? p.originalAmount : p.discountedAmount,
           });
         }
       });
