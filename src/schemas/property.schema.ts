@@ -4,10 +4,10 @@ import { PropertyType } from './property-type.schema';
 
 @Schema()
 export class Address {
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, index: true })
   city: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, index: true })
   state: string;
 
   @Prop({ type: String, required: true })
@@ -76,7 +76,8 @@ export enum DiscountContains {
 
 export enum DiscountRules {
   GREATER_THAN = "greaterThan",
-  LESS_THAN = "lessThan",
+  // LESS_THAN = "lessThan",
+  // EQUAL = "equal",
 }
 
 @Schema()
@@ -127,7 +128,7 @@ export class Property {
   @Prop({ type: CoverPhotos, required: true })
   coverPhotos: CoverPhotos;
 
-  @Prop({ required: false, type: String })
+  @Prop({ required: false, type: String, index: true })
   hostedById: string; // Refers to user ID
 
   @Prop({ required: true, type: [Image] })
@@ -156,6 +157,9 @@ export class Property {
     startDate: Date;
     endDate: Date;
   };
+
+  @Prop({ type: [String], required: false, default:[] })
+  tags: string[];
 }
 
 export const PropertySchema = SchemaFactory.createForClass(Property);

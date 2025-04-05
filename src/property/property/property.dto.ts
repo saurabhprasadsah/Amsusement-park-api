@@ -23,11 +23,7 @@ export class GetPropertyDto {
 
   @IsOptional()
   @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  city?: string;
+  search?: string;
 
   @IsOptional()
   @IsString()
@@ -124,4 +120,8 @@ export class CreatePropertyDto {
     startDate: string;
     endDate: string;
   };
+
+  @IsArray()
+  @IsOptional()
+  tags: string[];
 }

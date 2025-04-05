@@ -1,25 +1,19 @@
+import { MailerModule } from '@nestjs-modules/mailer';
+import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { MongooseModule } from '@nestjs/mongoose';
+import * as path from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { PropertyModule } from './property/property/property.module';
-import { MongooseModule } from '@nestjs/mongoose';
 import { DB, EMAIL, EMAIL_APP_PASSWORD } from './config/constants';
-import { CategoryModule } from './property/category/category.module';
-import { ReviewsModule } from './property/reviews/reviews.module';
-import { RolesGuard } from './auth/roles.guard';
-import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './auth/auth.guard';
-import { JwtModule } from '@nestjs/jwt';
-import { AuthService } from './auth/auth.service';
-import { Auth, AuthSchema } from './schemas/auth.schema';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
-import { MailService } from './shared/mail.service';
-import * as path from 'path';
-import { BookingModule } from './property/booking/booking.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { PaymentModule } from './payments/payments.module';
+import { BookingModule } from './property/booking/booking.module';
+import { PropertyModule } from './property/property/property.module';
+import { ReviewsModule } from './property/reviews/reviews.module';
+import { MailService } from './shared/mail.service';
 
 @Module({
   imports: [
@@ -28,7 +22,6 @@ import { PaymentModule } from './payments/payments.module';
     BookingModule,
     // PromotionsModule,
     PropertyModule,
-    CategoryModule,
     ReviewsModule,
     JwtModule.register({}),
     MailerModule.forRoot({

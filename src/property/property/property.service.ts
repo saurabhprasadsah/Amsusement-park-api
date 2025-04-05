@@ -1,9 +1,18 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { DiscountContains, PricingTypes, Property, PropertyDocument } from 'src/schemas/property.schema';
+import {
+  DiscountContains,
+  DiscountRules,
+  PricingTypes,
+  Property,
+  PropertyDocument,
+} from 'src/schemas/property.schema';
 import { CreatePropertyDto, GetPropertyDto } from './property.dto';
-import { PropertyType, PropertyTypeDocument } from 'src/schemas/property-type.schema';
+import {
+  PropertyType,
+  PropertyTypeDocument,
+} from 'src/schemas/property-type.schema';
 import { Category, CategoryDocument } from 'src/schemas/category.schema';
 import { City, CityDocument } from 'src/schemas/cities.schema';
 
@@ -17,8 +26,8 @@ export class PropertyService {
     @InjectModel(Category.name)
     private readonly categorySchema: Model<CategoryDocument>,
     @InjectModel(City.name)
-    private readonly citySchema: Model<CityDocument>
-  ) { }
+    private readonly citySchema: Model<CityDocument>,
+  ) {}
 
   async createProperty(property: CreatePropertyDto): Promise<Property> {
     try {
@@ -30,21 +39,18 @@ export class PropertyService {
   }
 
   async getProperty(query: GetPropertyDto): Promise<Property[]> {
-    const { page = 1, limit = 10, name, city, propertyType } = query;
+    const { page = 1, limit = 10, propertyType, search } = query;
 
-    const filter:any = {
+    const filter: any = {
       $or: [
-
+        { name: { $regex: search || '', $options: 'i' }},
+        { "address.city": { $regex: search || '', $options: 'i' }},
+        { "address.state": { $regex: search || '', $options: 'i' }},
       ],
       isActive: true,
-    }
-    if (name) filter['$or'].push({ name: { $regex: (name || ''), $options: 'i' } })
-    if (city) filter['$or'].push({ city: { $regex: (city || ''), $options: 'i' } })
-    // { city: { $regex: (city || ''), $options: 'i' } },
-    if (propertyType) filter['propertyType'] = propertyType
+    };
 
-    console.log(city, name, propertyType);
-
+    if (propertyType) filter['propertyType'] = propertyType;
     return this.propertySchema
       .find(filter)
       .skip((page - 1) * limit)
@@ -56,7 +62,7 @@ export class PropertyService {
     if (!result) {
       throw new HttpException('Property not found', 404);
     }
-    return result
+    return result;
   }
 
   // below related property type
@@ -114,16 +120,28 @@ export class PropertyService {
     }
   }
 
-  async getMyProperties(name:string, page:number= 1, limit: number = 10, userId:string) {
+  async getMyProperties(
+    name: string,
+    page: number = 1,
+    limit: number = 10,
+    userId: string,
+  ) {
     const filter = {
       hostedById: userId,
     };
-    if(name)  filter['name'] = { $regex: (name || ''), $options: 'i' }
-    return this.propertySchema.find(filter).skip((page - 1) * limit).limit(limit);
+    if (name) filter['name'] = { $regex: name || '', $options: 'i' };
+    return this.propertySchema
+      .find(filter)
+      .skip((page - 1) * limit)
+      .limit(limit);
   }
 
-  async updateProperty(id:string, property, hostedById:string) {
-    const result = await this.propertySchema.findOneAndUpdate({ _id: id, hostedById }, { ...property }, { new: true });
+  async updateProperty(id: string, property, hostedById: string) {
+    const result = await this.propertySchema.findOneAndUpdate(
+      { _id: id, hostedById },
+      { ...property },
+      { new: true },
+    );
     if (!result) {
       throw new HttpException('Property not found', 404);
     }
@@ -131,43 +149,51 @@ export class PropertyService {
   }
 
   async calculatePricing(priceCalculation: any) {
-    const property = await this.propertySchema.findById(priceCalculation.propertyId);
+    const property = await this.propertySchema.findById(
+      priceCalculation.propertyId,
+    );
     if (!property) {
       throw new HttpException('Property not found', 404);
     }
 
-    console.log(property.discount,)
     let totalAmount = 0;
 
-    const findDiscount = (contains: DiscountContains) => property.discount.find((discount) => {
-      return discount.contains.includes((contains) as any)
-    })
+    const findDiscount = (contains: DiscountContains) =>
+      property.discount.find((discount) => {
+        return discount.contains.includes(contains as any);
+      });
 
     property.price.map((price) => {
-      if (price.type === PricingTypes.PER_PEOPLE && priceCalculation.noOfPeople > 0) {
-        let temp = 0
+      if (
+        price.type === PricingTypes.PER_PEOPLE &&
+        priceCalculation.noOfPeople > 0
+      ) {
+        let temp = 0;
         temp += price.amount * priceCalculation.noOfPeople;
-        const discount = findDiscount(DiscountContains.PER_PEOPLE)
-        if (discount) {
-          temp -= (totalAmount * discount.amountInPercent) / 100
+        const discount = findDiscount(DiscountContains.PER_PEOPLE);
+        if (discount && DiscountRules.GREATER_THAN) {
+          temp -= (totalAmount * discount.amountInPercent) / 100;
         }
-        totalAmount += temp
+        totalAmount += temp;
       }
 
-      if (price.type === PricingTypes.PER_CHILDREN && priceCalculation.noOfChildren > 0) {
-        let temp = 0
+      if (
+        price.type === PricingTypes.PER_CHILDREN &&
+        priceCalculation.noOfChildren > 0
+      ) {
+        let temp = 0;
         temp += price.amount * priceCalculation.noOfChildren;
-        const discount = findDiscount(DiscountContains.PER_CHILDREN)
-        if (discount) {
-          temp -= (totalAmount * discount.amountInPercent) / 100
+        const discount = findDiscount(DiscountContains.PER_CHILDREN);
+        if (discount && DiscountRules.GREATER_THAN) {
+          temp -= (totalAmount * discount.amountInPercent) / 100;
         }
-        totalAmount += temp
+        totalAmount += temp;
       }
     });
 
     const normalDiscounts = findDiscount(DiscountContains.NORMAL);
-    if (normalDiscounts) {
-      totalAmount -= (totalAmount * normalDiscounts.amountInPercent) / 100
+    if (normalDiscounts && DiscountRules.GREATER_THAN) {
+      totalAmount -= (totalAmount * normalDiscounts.amountInPercent) / 100;
     }
 
     return { totalAmount, propertyId: property._id };
