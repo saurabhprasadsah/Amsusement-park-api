@@ -60,60 +60,50 @@ export class PropertyService {
       .limit(limit)
       .lean();
 
-    // result.map((property) => {
-    //   let visibleAmount = {
-    //     originalAmount: 0,
-    //     discountedAmount: 0,
-    //   }
+    const mappedWithDiscount = result.map((property) => {
+      const visiblePrice: any[] = [];
 
-    //   let temp = {
-    //     perPersonAmount: 0,
-    //     perChildrenAmount: 0,
-    //     normalChildrenDiscount: 0,
-    //     normalPersonDiscount: 0
-    //   }
+      property.price.map((price) => {
+        if (price.type === PricingTypes.PER_PEOPLE) {
+          const p = this.discountCalculatorService.calculatePersonDiscount({
+            price,
+            noOfPeople: 1,
+            property,
+          });
+          visiblePrice.push({
+            actualAmount: p.originalAmount,
+            discountedAmount: p.discountedAmount,
+          });
+        }
 
-    //   const findPrice = (pricingType) => property.price.find((price) => price.type === pricingType)
+        if (price.type === PricingTypes.PER_CHILDREN) {
+          const p = this.discountCalculatorService.calculateChildrenDiscount({
+            price,
+            noOfChildren: 1,
+            property,
+          });
+          visiblePrice.push({
+            actualAmount: p.originalAmount,
+            discountedAmount: p.discountedAmount,
+          });
+        }
+      });
 
-    //   temp.perPersonAmount = this.discountCalculatorService.calculatePersonDiscount({
-    //     price: findPrice(PricingTypes.PER_PEOPLE),
-    //     noOfPeople: 1,
-    //     property,
-    //   })
-    //   temp.perChildrenAmount = this.discountCalculatorService.calculateChildrenDiscount({
-    //     price: findPrice(PricingTypes.PER_CHILDREN),
-    //     noOfChildren: 1,
-    //     property,
-    //   })
+      function getMinDiscountedPrice(prices) {
+        return prices.reduce((minObj, currentObj) => {
+          return currentObj.discountedAmount < minObj.discountedAmount
+            ? currentObj
+            : minObj;
+        });
+      }
 
-    //   const isNormal = this.discountCalculatorService.findDiscount(DiscountContains.NORMAL, property)
-    //   if (isNormal && property.discount.length) {
-    //     const lowestAmount = Math.min(temp.perPersonAmount, temp.perChildrenAmount)
-    //     visibleAmount.originalAmount = lowestAmount
-    //     visibleAmount.discountedAmount = lowestAmount - (lowestAmount * isNormal.amountInPercent) / 100
-    //   } else if (property.discount.length){
-    //     const lowestAmount = Math.min(temp.perPersonAmount, temp.perChildrenAmount)
-    //     visibleAmount.originalAmount = lowestAmount
+      return {
+        ...property,
+        visiblePrice: getMinDiscountedPrice(visiblePrice),
+      };
+    });
 
-    //   }
-
-    //   temp.normalPersonDiscount = this.discountCalculatorService.calculateNormalDiscount({
-    //     property,
-    //     totalAmount: temp.perPersonAmount
-    //   })
-    //   temp.normalChildrenDiscount = this.discountCalculatorService.calculateNormalDiscount({
-    //     property,
-    //     totalAmount: temp.perChildrenAmount
-    //   })
-
-    //   const lowestAmount = Math.min(temp.perPersonAmount, temp.perChildrenAmount, temp.normalDiscount)
-    //   visibleAmount.originalAmount = lowestAmount
-    //   visibleAmount.discountedAmount = lowestAmount - temp.normalDiscount
-    //   property.visibleAmount = visibleAmount
-
-    // })
-
-    return result;
+    return mappedWithDiscount;
   }
 
   async getPropertyById(id: string): Promise<Property> {
@@ -217,7 +207,7 @@ export class PropertyService {
 
     let totalAmount = 0;
     let originalAmount = 0;
-    const offers = [];
+    const offers: any[] = [];
     const priceBreakup: any[] = [];
 
     property.price.map((price) => {
@@ -232,6 +222,8 @@ export class PropertyService {
         });
         totalAmount += p.discountedAmount;
         originalAmount += p.originalAmount;
+
+        if (p.offerMessage) offers.push(p.offerMessage);
         priceBreakup.push({
           originalAmount: p.originalAmount,
           discountedAmount: p.discountedAmount,
@@ -250,6 +242,8 @@ export class PropertyService {
         });
         totalAmount += p.discountedAmount;
         originalAmount += p.originalAmount;
+
+        if (p.offerMessage) offers.push(p.offerMessage);
         priceBreakup.push({
           originalAmount: p.originalAmount,
           discountedAmount: p.discountedAmount,
@@ -258,8 +252,13 @@ export class PropertyService {
       }
     });
 
+    const offersSet = new Set();
+    offers.forEach((item) => {
+      offersSet.add(item);
+    });
+
     return {
-      offersApplied: offers,
+      offersApplied: [...offersSet],
       discountedAmount: totalAmount,
       priceBreakup,
       originalAmount,
