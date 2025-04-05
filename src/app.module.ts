@@ -14,6 +14,7 @@ import { BookingModule } from './property/booking/booking.module';
 import { PropertyModule } from './property/property/property.module';
 import { ReviewsModule } from './property/reviews/reviews.module';
 import { MailService } from './shared/mail.service';
+import { CouponsModule } from './coupons/coupons.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { MailService } from './shared/mail.service';
     }),
     FileUploadModule,
     PaymentModule,
+    CouponsModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService],

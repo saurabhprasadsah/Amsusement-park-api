@@ -70,6 +70,9 @@ export class Booking extends Document {
 
     @Prop({ type: String, enum: Object.values(BookingStatus), default: BookingStatus.PENDING })
     bookingStatus: BookingStatus;
+
+    @Prop({ type: Object })
+    coupon: any;
 }
 
 export const BookingSchema = SchemaFactory.createForClass(Booking);

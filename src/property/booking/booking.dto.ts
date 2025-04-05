@@ -34,4 +34,8 @@ export class CreateBooking {
     @IsDate()
     @IsOptional()
     endDate: Date;
+
+    @IsString()
+    @IsOptional()
+    couponCode: string;
 }

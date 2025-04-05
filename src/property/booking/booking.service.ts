@@ -3,8 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Role } from 'src/auth/role.enum';
 import { Booking, BookingDocument, BookingStatus } from 'src/schemas/booking.schema';
+import { Coupon, CouponDocument } from 'src/schemas/coupons.schema';
 import { PropertyType, PropertyTypeDocument } from 'src/schemas/property-type.schema';
 import { DiscountContains, PricingTypes, Property, PropertyDocument } from 'src/schemas/property.schema';
+import { DiscountCalculatorService } from 'src/shared/discount-calculator.service';
 
 @Injectable()
 export class BookingService {
@@ -13,62 +15,121 @@ export class BookingService {
         private readonly bookingSchema: Model<BookingDocument>,
         @InjectModel(Property.name)
         private readonly propertySchema: Model<PropertyDocument>,
+        private discountCalculatorService: DiscountCalculatorService,
+        @InjectModel(Coupon.name)
+        private readonly couponSchema: Model<CouponDocument>,
+
         // @InjectModel(PropertyType.name)
         // private readonly propertyTypeSchema: Model<PropertyTypeDocument>,
     ) { }
 
-    async calculateTotalAmount(priceCalculation: any) {
-        const property = await this.propertySchema.findById(priceCalculation.propertyId);
+    async calculatePricing(priceCalculation: any, couponCode?: string) {
+        const property = await this.propertySchema.findById(
+          priceCalculation.propertyId,
+        );
         if (!property) {
-            throw new HttpException('Property not found', 404);
+          throw new HttpException('Property not found', 404);
         }
-
-        console.log(property.discount,)
+    
         let totalAmount = 0;
-
-        const findDiscount = (contains: DiscountContains) => property.discount.find((discount) => {
-            return discount.contains.includes((contains) as any)
-        })
-
+        let originalAmount = 0;
+        const offers: any[] = [];
+        const priceBreakup: any[] = [];
+    
         property.price.map((price) => {
-            if (price.type === PricingTypes.PER_PEOPLE && priceCalculation.noOfPeople > 0) {
-                let temp = 0
-                temp += price.amount * priceCalculation.noOfPeople;
-                const discount = findDiscount(DiscountContains.PER_PEOPLE)
-                if (discount) {
-                    temp -= (totalAmount * discount.amountInPercent) / 100
-                }
-                totalAmount += temp
-            }
-
-            if (price.type === PricingTypes.PER_CHILDREN && priceCalculation.noOfChildren > 0) {
-                let temp = 0
-                temp += price.amount * priceCalculation.noOfChildren;
-                const discount = findDiscount(DiscountContains.PER_CHILDREN)
-                if (discount) {
-                    temp -= (totalAmount * discount.amountInPercent) / 100
-                }
-                totalAmount += temp
-            }
+          if (
+            price.type === PricingTypes.PER_PEOPLE &&
+            priceCalculation.noOfPeople > 0
+          ) {
+            const p = this.discountCalculatorService.calculatePersonDiscount({
+              price,
+              noOfPeople: priceCalculation.noOfPeople,
+              property,
+            });
+            totalAmount += p.discountedAmount;
+            originalAmount += p.originalAmount;
+    
+            if (p.offerMessage) offers.push(p.offerMessage);
+            priceBreakup.push({
+              originalAmount: p.originalAmount,
+              discountedAmount: p.discountedAmount,
+              pricing: priceCalculation.noOfPeople + ' People',
+            });
+          }
+    
+          if (
+            price.type === PricingTypes.PER_CHILDREN &&
+            priceCalculation.noOfChildren > 0
+          ) {
+            const p = this.discountCalculatorService.calculateChildrenDiscount({
+              price,
+              noOfChildren: priceCalculation.noOfChildren,
+              property,
+            });
+            totalAmount += p.discountedAmount;
+            originalAmount += p.originalAmount;
+    
+            if (p.offerMessage) offers.push(p.offerMessage);
+            priceBreakup.push({
+              originalAmount: p.originalAmount,
+              discountedAmount: p.discountedAmount,
+              pricing: priceCalculation.noOfChildren + ' Children',
+            });
+          }
         });
+    
+        const offersSet = new Set();
+        offers.forEach((item) => {
+          offersSet.add(item);
+        });
+        
+        let couponsObj;
+        if(couponCode){
+            const coupons = await this.couponSchema.findOne({ code: couponCode })
+            if(!coupons){
+                throw new HttpException('Invalid coupon code', 400);
+            }
+            if(coupons.isExpired){
+                throw new HttpException('Coupon code is expired', 400);
+            }
+            if(coupons.isExpired){
+                throw new HttpException('Coupon code is already used', 400);
+            }
 
-        const normalDiscounts = findDiscount(DiscountContains.NORMAL);
-        if (normalDiscounts) {
-            totalAmount -= (totalAmount * normalDiscounts.amountInPercent) / 100
+            if(coupons.minimumAmount > totalAmount){
+                throw new HttpException('Minimum amount not met', 400);
+            }
+
+            totalAmount = totalAmount - coupons.discountAmount
+            couponsObj = coupons
+
+            await this.couponSchema.updateOne({ code: couponCode }, { $set: { isExpired: true } })    
         }
 
-        return { totalAmount, propertyId: property._id, property };
-    }
+        return {
+          offersApplied: [...offersSet],
+          discountedAmount: totalAmount,
+          priceBreakup,
+          originalAmount,
+          propertyId: property._id,
+          property: property,
+          coupon: {
+            code: couponCode,
+            discountAmount: couponsObj ? couponsObj.discountAmount : 0,
+          }
+        };
+      }
 
     async createBooking(booking, userId) {
-        const { totalAmount, property } = await this.calculateTotalAmount(booking);
+        const { discountedAmount: totalAmount, property, coupon } = await this.calculatePricing(booking, booking.couponCode);
         const bookingData = {
             ...booking,
             totalAmount,
             paidAmount: 0,
             bookingStatus: BookingStatus.PENDING,
             hostedById: property.hostedById,
-            bookedById: userId
+            bookedById: userId,
+            coupon
         };
 
         if (property.isActive === false) {
