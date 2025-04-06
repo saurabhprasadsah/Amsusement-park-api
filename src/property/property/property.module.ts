@@ -13,6 +13,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { Auth, AuthSchema } from 'src/schemas/auth.schema';
 import { City, CitySchema } from 'src/schemas/cities.schema';
 import { DiscountCalculatorService } from 'src/shared/discount-calculator.service';
+import { Amenity, AmenitySchema } from 'src/schemas/amenities.schema';
 
 @Module({
   imports: [
@@ -34,6 +35,14 @@ import { DiscountCalculatorService } from 'src/shared/discount-calculator.servic
       {
         name: City.name,
         schema: CitySchema
+      },
+      {
+        name: Auth.name,
+        schema: AuthSchema,
+      },
+      {
+        name: Amenity.name,
+        schema: AmenitySchema
       }
     ]),
   ],

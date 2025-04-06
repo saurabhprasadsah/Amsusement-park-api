@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { PropertyType } from './property-type.schema';
+import { Amenity } from './amenities.schema';
 
 @Schema()
 export class Address {
@@ -104,8 +105,8 @@ export class Property {
   @Prop({ type: String })
   fullDescription: string;
 
-  @Prop({ type: [String] })
-  amenities: string[]; // Refers to amenities table
+  @Prop({ type: [mongoose.Types.ObjectId], ref: Amenity.name }) 
+  amenities: mongoose.Types.ObjectId[];
 
   @Prop({ type: [String] })
   additionalAmenities: string[];
@@ -116,8 +117,8 @@ export class Property {
   @Prop({ required: false, type: String })
   category: string;
 
-  @Prop({ type: [Address], required: true })
-  address: Address[];
+  @Prop({ type: Address, required: true })
+  address: Address;
 
   @Prop({ type: ContactInfo, required: true })
   contactInfo: ContactInfo;
@@ -161,6 +162,9 @@ export class Property {
 
   @Prop({ type: [String], required: false, default:[] })
   tags: string[];
+
+  @Prop({ type: Number, default: 0 })
+  viewCount: number;
 }
 
 export const PropertySchema = SchemaFactory.createForClass(Property);

@@ -205,3 +205,36 @@ schema
 - rule: "greaterThan" enum
 - Quantity: number
 - contains: array
+
+
+--------------------------------------
+
+Incase of normal discount
+- amountInPercent
+- rule: "greaterThan" enum
+- Quantity: 0
+- contains: NORMAL
+
+Amount to show in card 
+- calculate 1 person amount
+- calculate 1 children amount
+
+originalVisibleAMount = Lowest(1person amount, 1 children amount);
+discountedAmount = originalVisibleAMount - (originalVisibleAMount * discountAmountInPercent) / 100;
+
+----
+
+
+------------------------
+Need apis for reviews
+Need api for recent viewed properties - done
+Need api for popular properties - done
+Need apis for wishlist
+Need most loved properties 
+Need to add amenities api -done
+-----------------------
+for history ping seprate api with propertyId - done
+Configure Amenities with icon
+
+Need to fix property type
+- Store PropertyType and select one of from its properties

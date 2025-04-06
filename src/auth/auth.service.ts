@@ -54,11 +54,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     const sessionToken = this.jwtService.sign(
-      { _id: user._id, role: user.role, isVerified: user.isVerified, email: user.email },
-      { secret: SESSION_TOKEN_KEY, expiresIn: '3h' },
+      { _id: user._id, role: user.role, isVerified: user.isVerified, email: user.email, name: user.name },
+      { secret: SESSION_TOKEN_KEY, expiresIn: '1h' },
     );
     const authToken = this.jwtService.sign(
-      { _id: user._id, isVerified: user.isVerified, role: user.role },
+      { _id: user._id, isVerified: user.isVerified, role: user.role, name: user.name },
       { secret: AUTH_TOKEN_KEY, expiresIn: '30d' },
     );
     return { sessionToken, authToken };
@@ -69,10 +69,10 @@ export class AuthService {
       const decoded = this.jwtService.verify(authToken, {
         secret: AUTH_TOKEN_KEY,
       });
-      const validUser = await this.authModel.findById(decoded._id);
-      if (decoded && validUser) {
+      const user = await this.authModel.findById(decoded._id);
+      if (decoded && user) {
         const sessionToken = this.jwtService.sign(
-          { id: decoded.id, role: decoded.role },
+          { _id: user._id, role: user.role, isVerified: user.isVerified, email: user.email, name: user.name },
           { secret: SESSION_TOKEN_KEY, expiresIn: '1h' },
         );
         return { sessionToken };
@@ -272,7 +272,7 @@ export class AuthService {
 
       const sessionToken = this.jwtService.sign(
         { _id: findUser._id, role: findUser.role, isVerified: findUser.isVerified, email: findUser.email },
-        { secret: SESSION_TOKEN_KEY, expiresIn: '3h' },
+        { secret: SESSION_TOKEN_KEY, expiresIn: '1d' },
       );
       const authToken = this.jwtService.sign(
         { _id: findUser._id, isVerified: findUser.isVerified, role: findUser.role },
@@ -281,5 +281,19 @@ export class AuthService {
 
       return { sessionToken,authToken, message: 'OTP verified successfully', success: true };
     } else throw new BadRequestException();
+  }
+
+  async logHistory(propertyId: string, userId: string) {
+    const user = await this.authModel.findById(userId)
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    if(!user.propertyHistory){
+      user.propertyHistory = [propertyId]
+    } else {
+      user.propertyHistory.push(propertyId)
+    }
+    await user.save();
+    return { message: 'History logged successfully', success: true };
   }
 }

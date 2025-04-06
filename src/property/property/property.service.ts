@@ -16,6 +16,8 @@ import {
 import { Category, CategoryDocument } from 'src/schemas/category.schema';
 import { City, CityDocument } from 'src/schemas/cities.schema';
 import { DiscountCalculatorService } from 'src/shared/discount-calculator.service';
+import { Auth, AuthDocument } from 'src/schemas/auth.schema';
+import { Amenity, AmenityDocument } from 'src/schemas/amenities.schema';
 
 @Injectable()
 export class PropertyService {
@@ -29,6 +31,10 @@ export class PropertyService {
     @InjectModel(City.name)
     private readonly citySchema: Model<CityDocument>,
     private discountCalculatorService: DiscountCalculatorService,
+    @InjectModel(Auth.name)
+    private readonly authSchema: Model<AuthDocument>,
+    @InjectModel(Amenity.name)
+    private readonly amenitySchema: Model<AmenityDocument>,
   ) {}
 
   async createProperty(property: CreatePropertyDto): Promise<Property> {
@@ -52,7 +58,8 @@ export class PropertyService {
       isActive: true,
     };
 
-    if (propertyType) filter['propertyType'] = propertyType;
+    if (propertyType && propertyType != 'null')
+      filter['propertyType'] = propertyType;
 
     const result = await this.propertySchema
       .find(filter)
@@ -60,6 +67,10 @@ export class PropertyService {
       .limit(limit)
       .lean();
 
+    return this.addDiscounts(result);
+  }
+
+  addDiscounts(result) {
     const mappedWithDiscount = result.map((property) => {
       const visiblePrice: any[] = [];
 
@@ -71,6 +82,7 @@ export class PropertyService {
             property,
           });
           visiblePrice.push({
+            label: this.formatLabel(PricingTypes.PER_PEOPLE),
             actualAmount: p.originalAmount,
             discountedAmount:
               p.discountedAmount === 0 ? p.originalAmount : p.discountedAmount,
@@ -84,6 +96,7 @@ export class PropertyService {
             property,
           });
           visiblePrice.push({
+            label: this.formatLabel(PricingTypes.PER_CHILDREN),
             actualAmount: p.originalAmount,
             discountedAmount:
               p.discountedAmount === 0 ? p.originalAmount : p.discountedAmount,
@@ -108,11 +121,22 @@ export class PropertyService {
     return mappedWithDiscount;
   }
 
+  formatLabel(label: string) {
+    let split: any | any[] = label.toLowerCase().split('_');
+    split = split
+      .map((i) => i[0].toUpperCase() + i.slice(1, i.length))
+      .join(' ');
+    return split;
+  }
+
   async getPropertyById(id: string): Promise<Property> {
-    const result = await this.propertySchema.findById(id);
+    const result = await this.propertySchema.findById(id).populate('amenities');
     if (!result) {
       throw new HttpException('Property not found', 404);
     }
+
+    result.viewCount = result.viewCount + 1;
+    await result.save();
     return result;
   }
 
@@ -124,6 +148,16 @@ export class PropertyService {
     } catch (err) {
       throw new HttpException(err.message, 400);
     }
+  }
+
+  async getMostViewedProperties(limit) {
+    const result = await this.propertySchema
+      .find({ isActive: true })
+      .sort({ viewCount: -1 })
+      .limit(limit || 4)
+      .lean();
+
+    return this.addDiscounts(result);
   }
 
   async getPropertyTypes() {
@@ -159,7 +193,7 @@ export class PropertyService {
   }
 
   async getCities() {
-    return this.citySchema.find();
+    return this.citySchema.find({ isActive: true });
   }
 
   async addCity(city: string, state: string, image: string) {
@@ -191,6 +225,7 @@ export class PropertyService {
   ) {
     const filter = {
       hostedById: userId,
+      isActive: true,
     };
     if (name) filter['name'] = { $regex: name || '', $options: 'i' };
     return this.propertySchema
@@ -211,6 +246,38 @@ export class PropertyService {
     return result;
   }
 
+  async getRecentlyViewedProperties({ userId }) {
+    const user = await this.authSchema
+      .findById(userId)
+      .select('propertyHistory')
+      .lean();
+
+    if (!user) {
+      throw new HttpException('User not found', 404);
+    }
+
+    try {
+      const str = user.propertyHistory
+        .slice(user.propertyHistory.length - 5, user.propertyHistory.length)
+        .reverse();
+      console.log('STR', str, str.length);
+      const result = await this.propertySchema
+        .find({ _id: { $in: [...str] } })
+        .lean();
+      return this.addDiscounts(result);
+    } catch (error) {
+      throw new HttpException(error.message, 400);
+    }
+  }
+
+  getAmenities() {
+    return this.amenitySchema.find();
+  }
+
+  createAmenities(amenities: any[]) {
+    return this.amenitySchema.insertMany(amenities);
+  }
+
   async calculatePricing(priceCalculation: any) {
     const property = await this.propertySchema.findById(
       priceCalculation.propertyId,
@@ -223,6 +290,8 @@ export class PropertyService {
     let originalAmount = 0;
     const offers: any[] = [];
     const priceBreakup: any[] = [];
+    const allOffers = new Set();
+    property.discount.forEach((discount) => allOffers.add(discount.label));
 
     property.price.map((price) => {
       if (
@@ -240,8 +309,10 @@ export class PropertyService {
         if (p.offerMessage) offers.push(p.offerMessage);
         priceBreakup.push({
           originalAmount: p.originalAmount,
-          discountedAmount: p.discountedAmount,
+          discountedAmount:
+            p.discountedAmount === 0 ? p.originalAmount : p.discountedAmount,
           pricing: priceCalculation.noOfPeople + ' People',
+          type: price.type,
         });
       }
 
@@ -260,8 +331,10 @@ export class PropertyService {
         if (p.offerMessage) offers.push(p.offerMessage);
         priceBreakup.push({
           originalAmount: p.originalAmount,
-          discountedAmount: p.discountedAmount,
+          discountedAmount:
+            p.discountedAmount === 0 ? p.originalAmount : p.discountedAmount,
           pricing: priceCalculation.noOfChildren + ' Children',
+          type: price.type,
         });
       }
     });
@@ -277,6 +350,7 @@ export class PropertyService {
       priceBreakup,
       originalAmount,
       propertyId: property._id,
+      allOffers: [...allOffers],
     };
   }
 }

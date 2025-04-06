@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Query, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   ChangePasswordDto,
@@ -73,4 +73,14 @@ export class AuthController {
 
   @Post('update-user-info')
   async updateUserInfo() {}
+
+  @Get('log-history')
+  @Roles(Role.User, Role.Vendor)
+  @UseGuards(RolesGuard)
+  async logHistory(
+    @Query('propertyId') propertyId: string,
+    @Req() req: any,
+  ) {
+    return this.authService.logHistory(propertyId, req.user._id);
+  }
 }

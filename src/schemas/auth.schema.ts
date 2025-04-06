@@ -103,6 +103,12 @@ export class Auth extends Document {
 
   @Prop({ type: String, enum: Status, default: Status.Active })
   status: Status;
+
+  @Prop({ type: String, required: false })
+  profileImage: string;
+
+  @Prop({ type: [String], required: false, default: [] })
+  propertyHistory: string[];
 }
 
 export const AuthSchema = SchemaFactory.createForClass(Auth);
