@@ -165,9 +165,25 @@ export class PropertyController {
     async addCity(
         @Body('city') city: string,
         @Body('state') state: string,
+        @Body('image') image: string,
     ) {
         try {
-            return this.propertyService.addCity(city, state);
+            return this.propertyService.addCity(city, state, image);
+        } catch (err) {
+            throw new HttpException(err.message, 400);
+        }
+    }
+
+    @Patch("cities")
+    async updateCity(
+        @Body('cityId') cityId: string,
+        @Body('city') city: string,
+        @Body('state') state: string,
+        @Body('image') image: string,
+        @Body('isActive') isActive: boolean,
+    ) {
+        try {
+            return this.propertyService.updateCity({cityId, city, state, image, isActive});
         } catch (err) {
             throw new HttpException(err.message, 400);
         }

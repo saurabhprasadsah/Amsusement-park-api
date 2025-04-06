@@ -72,7 +72,8 @@ export class PropertyService {
           });
           visiblePrice.push({
             actualAmount: p.originalAmount,
-            discountedAmount: p.discountedAmount === 0 ? p.originalAmount : p.discountedAmount,
+            discountedAmount:
+              p.discountedAmount === 0 ? p.originalAmount : p.discountedAmount,
           });
         }
 
@@ -84,7 +85,8 @@ export class PropertyService {
           });
           visiblePrice.push({
             actualAmount: p.originalAmount,
-            discountedAmount: p.discountedAmount === 0 ? p.originalAmount : p.discountedAmount,
+            discountedAmount:
+              p.discountedAmount === 0 ? p.originalAmount : p.discountedAmount,
           });
         }
       });
@@ -160,13 +162,25 @@ export class PropertyService {
     return this.citySchema.find();
   }
 
-  async addCity(city: string, state: string) {
+  async addCity(city: string, state: string, image: string) {
     try {
-      await this.citySchema.create({ city, state, isActive: true });
+      await this.citySchema.create({ city, state, image, isActive: true });
       return { success: true, message: 'City Added' };
     } catch (err) {
       throw new HttpException(err.message, 400);
     }
+  }
+
+  async updateCity({ cityId, city, state, image, isActive }) {
+    const result = await this.citySchema.findByIdAndUpdate(
+      cityId,
+      { city, state, image, isActive },
+      { new: true },
+    );
+    if (!result) {
+      throw new HttpException('City not found', 404);
+    }
+    return result;
   }
 
   async getMyProperties(
