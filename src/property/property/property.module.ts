@@ -14,6 +14,9 @@ import { Auth, AuthSchema } from 'src/schemas/auth.schema';
 import { City, CitySchema } from 'src/schemas/cities.schema';
 import { DiscountCalculatorService } from 'src/shared/discount-calculator.service';
 import { Amenity, AmenitySchema } from 'src/schemas/amenities.schema';
+import { CouponsService } from 'src/coupons/coupons.service';
+import { Coupon, CouponSchema } from 'src/schemas/coupons.schema';
+import { MailService } from 'src/shared/mail.service';
 
 @Module({
   imports: [
@@ -34,7 +37,7 @@ import { Amenity, AmenitySchema } from 'src/schemas/amenities.schema';
       },
       {
         name: City.name,
-        schema: CitySchema
+        schema: CitySchema,
       },
       {
         name: Auth.name,
@@ -42,11 +45,20 @@ import { Amenity, AmenitySchema } from 'src/schemas/amenities.schema';
       },
       {
         name: Amenity.name,
-        schema: AmenitySchema
-      }
+        schema: AmenitySchema,
+      },
+      {
+        name: Coupon.name,
+        schema: CouponSchema,
+      },
     ]),
   ],
   controllers: [PropertyController],
-  providers: [PropertyService, DiscountCalculatorService],
+  providers: [
+    PropertyService,
+    DiscountCalculatorService,
+    CouponsService,
+    MailService,
+  ],
 })
 export class PropertyModule {}

@@ -18,6 +18,7 @@ import { City, CityDocument } from 'src/schemas/cities.schema';
 import { DiscountCalculatorService } from 'src/shared/discount-calculator.service';
 import { Auth, AuthDocument } from 'src/schemas/auth.schema';
 import { Amenity, AmenityDocument } from 'src/schemas/amenities.schema';
+import { CouponsService } from 'src/coupons/coupons.service';
 
 @Injectable()
 export class PropertyService {
@@ -35,6 +36,7 @@ export class PropertyService {
     private readonly authSchema: Model<AuthDocument>,
     @InjectModel(Amenity.name)
     private readonly amenitySchema: Model<AmenityDocument>,
+    private couponService: CouponsService,
   ) {}
 
   async createProperty(property: CreatePropertyDto): Promise<Property> {

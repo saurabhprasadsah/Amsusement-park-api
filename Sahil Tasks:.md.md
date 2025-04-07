@@ -21,9 +21,10 @@ Vendor
         - Show Two Fields
             - Flat discount amount
             - Label for the offer. Like "Flat 10% off"
-    - Percentage discount - Two row of fields for children and adult.
+    - Percentage discount - Two row of fields for children and adult. These fields can be added multiple times. means. more than 3 people can have different discount. more than 5 can have different discount.
         - Min Person
         - Amount
+        - Children / Person
 
 - During Property Type Selection. 
     - After user select property type.
@@ -42,7 +43,6 @@ Vendor
 - City should be selected from dropdown. State will be disabled  but value should be filled in.
 - Add a new field for "tags"
     - This will be used for searches. - current search will be not work based on this.
-
 
 
 Pranav Pending

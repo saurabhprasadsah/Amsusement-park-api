@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { CouponsService } from './coupons.service';
 import { Role } from 'src/auth/role.enum';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -21,7 +21,7 @@ export class CouponsController {
         return this.couponService.createCoupon(coupon, req.user._id);
     }
 
-    @Post('get-coupons')
+    @Get('get-coupons')
     @UseGuards(RolesGuard)
     @Roles(Role.Admin, Role.Vendor)
     async getCoupons(
@@ -31,14 +31,14 @@ export class CouponsController {
     }
 
 
-    @Post('verify-coupon')
-    @UseGuards(RolesGuard)
-    @Roles(Role.User)
-    async verifyCoupon(
-        @Body('couponCode') couponCode: string,
-        @Req() req: any
-    ){
-        return this.couponService.verifyCoupon(couponCode, req.user._id);
-    }
+    // @Post('verify-coupon')
+    // @UseGuards(RolesGuard)
+    // @Roles(Role.User, Role.Admin, Role.Vendor)
+    // async verifyCoupon(
+    //     @Body('couponCode') couponCode: string,
+    //     @Req() req: any
+    // ){
+    //     return this.couponService.verifyCoupon(couponCode, req.user._id);
+    // }
 
 }

@@ -231,10 +231,12 @@ Need api for recent viewed properties - done
 Need api for popular properties - done
 Need apis for wishlist
 Need most loved properties 
-Need to add amenities api -done
+Need to add amenities api - done
 -----------------------
 for history ping seprate api with propertyId - done
 Configure Amenities with icon
 
 Need to fix property type
-- Store PropertyType and select one of from its properties
+- Store PropertyType and select one of from its properties - done
+---------------
+Send Coupons Codes to email. Add this functionality provided email

@@ -1,29 +1,50 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import mongoose from "mongoose";
-import { Auth } from "./auth.schema";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import mongoose from 'mongoose';
+import { Auth } from './auth.schema';
+import { Property } from './property.schema';
+
+class LogEntry {
+  @Prop({ type: mongoose.Types.ObjectId, required: true, ref: Auth.name })
+  userId: mongoose.Types.ObjectId;
+
+  @Prop({ type: Date, default: Date.now })
+  date: Date;
+}
 
 @Schema({ timestamps: true })
 export class Coupon {
-    @Prop({ type: String, required: true })
-    code: string;
-    
-    @Prop({ type: Number, required: true })
-    discountAmount: number;
+  @Prop({ type: String, required: true })
+  code: string;
 
-    @Prop({ type: Date, required: true })
-    expiryDate: Date;
+  @Prop({ type: Number, required: false })
+  discountAmount: number;
 
-    @Prop({ type: mongoose.Types.ObjectId, ref: Auth.name, required: true })
-    createdBy: Auth;
+  @Prop({ type: Number, required: false })
+  discountAmountFlat: number;
 
-    @Prop({ type: Number, required: true })
-    minimumAmount: number;
+  @Prop({ type: Date, required: true })
+  expiryDate: Date;
 
-    @Prop({ type: Boolean, default: false })
-    isExpired: boolean;
+  @Prop({ type: mongoose.Types.ObjectId, ref: Auth.name, required: true })
+  createdBy: mongoose.Types.ObjectId;
 
-    @Prop({ type: Array, default: [] })
-    log: any[];
+  @Prop({ type: Number, required: true })
+  minimumAmount: number;
+
+  @Prop({ type: Boolean, required: true, default: false })
+  canBeUsedAnyUser: boolean;
+
+  @Prop({ type: String, required: true })
+  email: string;
+
+  @Prop({ type: [mongoose.Types.ObjectId], ref: Property.name })
+  properties: mongoose.Types.ObjectId[];
+
+  @Prop({ type: Boolean, default: false })
+  isExpired: boolean;
+
+  @Prop({ type: [LogEntry], default: [] })
+  log: LogEntry[];
 }
 
 export const CouponSchema = SchemaFactory.createForClass(Coupon);

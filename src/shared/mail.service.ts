@@ -42,17 +42,17 @@ export class MailService {
     }
   }
 
-  async sendMailTOCrio(){
+  async sendCouponCode({ email, couponCode }: { email: string; couponCode: string }) {
     try {
       await this.mailerService.sendMail({
-        to: 'support@criodo.com',
-        subject: 'Your Account Verification OTP',
-        template: './account-verification', // Path is relative to templates folder
+        to: email,
+        subject: 'Coupon Code',
+        template: './send-coupon-code', // Path is relative to templates folder
         context: {
+          coupon_code: couponCode
         },
       });
-      x++
-      console.log(`OTP email sent successfully to`, x);
+      console.log(`Coupon Sent`, email);
     } catch (error) {
       console.error('Error sending OTP email:', error);
     }

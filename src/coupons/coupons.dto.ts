@@ -1,12 +1,25 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, IsString } from 'class-validator';
 
 export class CreateCouponsDto {
-  @IsString()
-  code: string;
 
   @IsNumber()
-  discountAmount: number;
+  discountAmountPercentage: number;
+
+  @IsNumber()
+  discountAmountFlat: number;
 
   @IsString()
-  expiryDate: Date;
+  expiryDate: string;
+
+  @IsArray()
+  properties: string[];
+
+  @IsNumber()
+  minimumAmount: number;
+
+  @IsString()
+  email: string;
+
+  @IsBoolean()
+  canBeUsedAnyUser: boolean;
 }
