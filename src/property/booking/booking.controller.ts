@@ -18,7 +18,7 @@ export class BookingController {
         @Body() booking: CreateBooking,
         @Req() req: any
     ) {
-        return this.bookingService.createBooking(booking, req.user._id);
+        return this.bookingService.createBooking(booking, req.user._id, req.user.email);
     }
 
     @Get()

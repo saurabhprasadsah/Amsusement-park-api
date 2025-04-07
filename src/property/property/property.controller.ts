@@ -133,7 +133,7 @@ export class PropertyController {
       noOfRooms,
       noOfChildren,
       couponCode,
-    }, req.user._id,);
+    }, req.user._id, req.user.email);
   }
 
   // below related property type

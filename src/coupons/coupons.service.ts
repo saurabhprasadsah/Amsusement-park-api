@@ -107,4 +107,15 @@ export class CouponsService {
       coupon: result,
     };
   }
+
+  async markAsExpired(couponCode: string) {
+    const coupon = await this.couponModel.findOne({ couponCode });
+    if (!coupon) {
+        return { success: false, message: 'Coupon not found' };
+    }
+
+    coupon.isExpired = true;
+    await coupon.save();
+    return { message: 'Coupon marked as expired' }; 
+  }
 }

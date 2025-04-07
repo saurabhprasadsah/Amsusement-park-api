@@ -8,6 +8,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { Auth, AuthSchema } from 'src/schemas/auth.schema';
 import { DiscountCalculatorService } from 'src/shared/discount-calculator.service';
 import { Coupon, CouponSchema } from 'src/schemas/coupons.schema';
+import { CouponsService } from 'src/coupons/coupons.service';
+import { MailService } from 'src/shared/mail.service';
 
 @Module({
   imports: [
@@ -27,11 +29,11 @@ import { Coupon, CouponSchema } from 'src/schemas/coupons.schema';
       {
         name: Coupon.name,
         schema: CouponSchema
-      }
+      },
     ]),
     JwtModule.register({})
   ],
-  providers: [BookingService, DiscountCalculatorService],
+  providers: [BookingService, DiscountCalculatorService, CouponsService, MailService],
   controllers: [BookingController]
 })
 export class BookingModule {}
