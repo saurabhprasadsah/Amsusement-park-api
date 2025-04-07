@@ -17,7 +17,7 @@ export class Coupon {
   code: string;
 
   @Prop({ type: Number, required: false })
-  discountAmount: number;
+  discountAmountPercentage: number;
 
   @Prop({ type: Number, required: false })
   discountAmountFlat: number;

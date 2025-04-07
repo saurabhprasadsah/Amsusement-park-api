@@ -44,22 +44,44 @@ export class CouponsService {
     return this.couponModel.find({ createdBy: userId });
   }
 
-  async verifyCoupon(couponCode: string, userId: string) {
+  async verifyCoupon({
+    couponCode,
+    userId,
+    totalAmount,
+    propertyId,
+    email
+  }: {
+    couponCode: string;
+    userId: string;
+    totalAmount: number;
+    propertyId: string;
+    email: string;
+  }) {
     const result = await this.couponModel.findOne({
       code: couponCode,
       isExpired: false,
     });
 
-    if (!result) {
-      throw new HttpException('Coupon not found', 404);
+    if (!result) return { success: false, message: 'Coupon not found' };
+
+    if(result.minimumAmount > totalAmount) {
+      return { success: false, message: 'Minimum amount not met' };
+    }
+
+    if (!result.properties.includes(new mongoose.Types.ObjectId(propertyId))) {
+        return { success: false, message: 'Coupon not valid for this property' };
     }
 
     if (new Date().getTime() > new Date(result.expiryDate).getTime()) {
-      throw new HttpException('Coupon is expired', 400);
+      return { success: false, message: 'Coupon is expired' };
+    }
+
+    if(result.canBeUsedAnyUser === false && result.email !== email) {
+      return { success: false, message: 'Coupon is not valid for this user' };
     }
 
     if (result?.isExpired) {
-      throw new HttpException('Coupon is expired', 400);
+      return { success: false, message: 'Coupon is expired' };
     }
 
     result.log.push({
@@ -72,17 +94,17 @@ export class CouponsService {
     if (result.log.length > 7) {
       result.isExpired = true;
       await result.save();
-      throw new HttpException('Coupon is expired', 400);
+      return { success: false, message: 'Coupon is expired' };
     }
 
     if (result?.isExpired) {
-      throw new HttpException('Coupon is expired', 400);
+      return { success: false, message: 'Coupon is expired' };
     }
 
     return {
       success: true,
       message: 'Coupon is valid',
-      coupon: result
+      coupon: result,
     };
   }
 }

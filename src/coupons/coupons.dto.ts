@@ -3,9 +3,6 @@ import { IsArray, IsBoolean, IsNumber, IsString } from 'class-validator';
 export class CreateCouponsDto {
 
   @IsNumber()
-  discountAmountPercentage: number;
-
-  @IsNumber()
   discountAmountFlat: number;
 
   @IsString()

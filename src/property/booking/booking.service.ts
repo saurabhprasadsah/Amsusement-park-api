@@ -100,8 +100,8 @@ export class BookingService {
                 throw new HttpException('Minimum amount not met', 400);
             }
 
-            totalAmount = totalAmount - coupons.discountAmount
-            couponsObj = coupons
+            // totalAmount = totalAmount - coupons.discountAmount
+            // couponsObj = coupons
 
             await this.couponSchema.updateOne({ code: couponCode }, { $set: { isExpired: true } })    
         }

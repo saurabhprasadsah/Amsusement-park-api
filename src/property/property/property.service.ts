@@ -280,7 +280,7 @@ export class PropertyService {
     return this.amenitySchema.insertMany(amenities);
   }
 
-  async calculatePricing(priceCalculation: any) {
+  async calculatePricing(priceCalculation: any, userId: string, email:string) {
     const property = await this.propertySchema.findById(
       priceCalculation.propertyId,
     );
@@ -341,10 +341,30 @@ export class PropertyService {
       }
     });
 
+    let couponResult: any = null;
+
     const offersSet = new Set();
     offers.forEach((item) => {
       offersSet.add(item);
     });
+
+    if (priceCalculation.couponCode) {
+      const coupon = await this.couponService.verifyCoupon({
+        couponCode: priceCalculation.couponCode,
+        userId: userId,
+        totalAmount,
+        propertyId: property._id as string,
+        email: email
+      });
+
+      if (coupon && coupon.success) {
+        totalAmount -= coupon.coupon?.discountAmountFlat || 0;
+        couponResult = `Coupon applied! You saved ₹${coupon.coupon?.discountAmountFlat}`;
+        offersSet.add(`Coupon applied! You saved ₹${coupon.coupon?.discountAmountFlat}`);
+      } else {
+        couponResult = coupon.message;
+      }
+    }
 
     return {
       offersApplied: [...offersSet],
@@ -353,6 +373,7 @@ export class PropertyService {
       originalAmount,
       propertyId: property._id,
       allOffers: [...allOffers],
+      couponResult,
     };
   }
 }

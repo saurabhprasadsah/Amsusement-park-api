@@ -114,12 +114,17 @@ export class PropertyController {
   }
 
   @Get('calculate-pricing')
+  @UseGuards(RolesGuard)
+  @Roles(Role.User, Role.Vendor)
   async calculatePricing(
     @Query('propertyId') propertyId: string,
+    @Req() req: any,
     @Query('noOfPeople') noOfPeople?: number,
     @Query('noOfDays') noOfDays?: number,
     @Query('noOfRooms') noOfRooms?: number,
     @Query('noOfChildren') noOfChildren?: number,
+    @Query('couponCode') couponCode?: string,
+
   ) {
     return this.propertyService.calculatePricing({
       propertyId,
@@ -127,7 +132,8 @@ export class PropertyController {
       noOfDays,
       noOfRooms,
       noOfChildren,
-    });
+      couponCode,
+    }, req.user._id,);
   }
 
   // below related property type
