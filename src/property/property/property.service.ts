@@ -343,6 +343,7 @@ export class PropertyService {
 
     let couponResult: any = null;
     let isCouponError = false;
+    let isCouponSuccess = false;
 
     const offersSet = new Set();
     offers.forEach((item) => {
@@ -362,6 +363,7 @@ export class PropertyService {
         totalAmount -= coupon.coupon?.discountAmountFlat || 0;
         couponResult = `Coupon applied! You saved ₹${coupon.coupon?.discountAmountFlat}`;
         offersSet.add(`Coupon applied! You saved ₹${coupon.coupon?.discountAmountFlat}`);
+        isCouponSuccess = true
       } else {
         couponResult = coupon.message;
         isCouponError = true;
@@ -375,6 +377,7 @@ export class PropertyService {
       originalAmount,
       propertyId: property._id,
       allOffers: [...allOffers],
+      isCouponSuccess: isCouponSuccess,
       isCouponError: isCouponError,
       couponResult,
     };

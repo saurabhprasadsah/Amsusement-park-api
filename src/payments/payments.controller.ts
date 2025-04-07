@@ -43,6 +43,7 @@ export class PaymentController {
   }
 
   @Post('verify-payment')
+  @Roles(Role.User, Role.Admin)
   async verifyPayment(
     @Body()
     body: {
@@ -52,13 +53,14 @@ export class PaymentController {
       userId: string;
       bookingId: string;
     },
+    @Req() req: any,
   ) {
     try {
       const payment = await this.paymentService.verifyPayment(
         body.razorpayOrderId,
         body.razorpayPaymentId,
         body.razorpaySignature,
-        body.userId,
+        req.user._id,
         body.bookingId,
       );
       return {

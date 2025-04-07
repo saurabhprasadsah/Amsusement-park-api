@@ -45,6 +45,24 @@ Vendor
     - This will be used for searches. - current search will be not work based on this.
 
 
+
+------------
+Add A loading indicator when user click on Confirm Booking Button. I had added a variable for that. make sure this will full page loading indicator. "isBookingConfirmationLoading"
+
+Add a checkbox for pay later. Inside booking confirmation modal. Connect it with isPayLater. 
+
+Clear Coupon code when modal is closed. 
+
+this.homeService.makeBooking(booking).subscribe({
+iske error pe ek message dikha dena. with error message
+
+code me data dekhna ho kaise hai to - debugger; text add kar dena instead of console. It will show data in better way. THis will only work with js code. 
+
+Make design and functionalities compaitable with mobile also. 
+
+Error will contain message and status code always. { message }
+----------
+
 Pranav Pending
 - Create wishlist api
 - Create Review and testimonial api

@@ -30,7 +30,6 @@ export class BookingService {
     @InjectModel(Property.name)
     private readonly propertySchema: Model<PropertyDocument>,
     private discountCalculatorService: DiscountCalculatorService,
-    @InjectModel(Coupon.name)
     private couponService: CouponsService,
     // @InjectModel(PropertyType.name)
     // private readonly propertyTypeSchema: Model<PropertyTypeDocument>,

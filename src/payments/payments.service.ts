@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Payment, PaymentDocument } from '../schemas/payment.schema';
 import { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } from 'src/config/constants';
-import { Booking, BookingDocument } from 'src/schemas/booking.schema';
+import { Booking, BookingDocument, BookingStatus, PaymentStatus } from 'src/schemas/booking.schema';
 const Razorpay = require('razorpay');
 
 @Injectable()
@@ -45,7 +45,15 @@ export class PaymentService {
         },
       });
 
-      return order;
+      await this.bookingModel.findByIdAndUpdate(
+        bookingId,
+        {
+          paymentStatus: PaymentStatus.PENDING,
+          paymentId: order.id,
+        },
+        { new: true },
+      );
+      return {...order, razorPayId: RAZORPAY_KEY_ID};
 
     } catch (error) {
       throw new HttpException(
@@ -104,6 +112,16 @@ export class PaymentService {
         if (!payment) {
           throw new HttpException('Payment record not found', HttpStatus.NOT_FOUND);
         }
+
+        await this.bookingModel.findByIdAndUpdate(
+          bookingId,
+          {
+            paymentStatus: PaymentStatus.SUCCESS,
+            paymentId: payment._id,
+            razorpayPaymentId,
+          },
+          { new: true },
+        );
 
         return payment;
       } else {
