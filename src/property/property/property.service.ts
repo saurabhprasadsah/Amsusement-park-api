@@ -55,7 +55,7 @@ export class PropertyService {
       $or: [
         { name: { $regex: search || '', $options: 'i' } },
         { 'address.city': { $regex: search || '', $options: 'i' } },
-        { 'address.state': { $regex: search || '', $options: 'i' } },
+        // { 'address.state': { $regex: search || '', $options: 'i' } },
       ],
       isActive: true,
     };
@@ -64,15 +64,17 @@ export class PropertyService {
       filter['propertyType'] = propertyType;
 
     const result = await this.propertySchema
-      .find(filter)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
-
+    .find(filter)
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .lean();
+    
+    console.log("RESult", search);
     return this.addDiscounts(result);
   }
 
   addDiscounts(result) {
+    console.log("RESULT", result);
     const mappedWithDiscount = result.map((property) => {
       const visiblePrice: any[] = [];
 
@@ -227,13 +229,16 @@ export class PropertyService {
   ) {
     const filter = {
       hostedById: userId,
-      isActive: true,
     };
     if (name) filter['name'] = { $regex: name || '', $options: 'i' };
-    return this.propertySchema
+    const result = await this.propertySchema
       .find(filter)
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .lean();
+
+    console.log(result);
+    return this.addDiscounts(result)
   }
 
   async updateProperty(id: string, property, hostedById: string) {

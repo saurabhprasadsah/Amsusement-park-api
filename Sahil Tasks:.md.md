@@ -61,6 +61,10 @@ code me data dekhna ho kaise hai to - debugger; text add kar dena instead of con
 Make design and functionalities compaitable with mobile also. 
 
 Error will contain message and status code always. { message }
+
+Add loading indicator on "item-detail" page while loading property details.
+
+Use a valid card to payment testing. Payment will be not deducted. Just select Skip Otp when it asks for otp. if it still ask for otp. type some random 6 digit. Just use valid card no. expiry u can type any and cvv also. 
 ----------
 
 Pranav Pending

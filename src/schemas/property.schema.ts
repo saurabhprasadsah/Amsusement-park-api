@@ -147,11 +147,11 @@ export class Property {
     default: [],
   })
   discount: {
-    rule: DiscountRules;
+    rule?: DiscountRules;
     amountInPercent: number;
     quantity: number;
     label?: string
-    contains: DiscountContains[];
+    contains: DiscountContains;
   }[];
 
   @Prop({ type: { startDate: Date, endDate: Date } })
