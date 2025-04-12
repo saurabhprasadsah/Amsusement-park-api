@@ -240,3 +240,14 @@ Need to fix property type
 - Store PropertyType and select one of from its properties - done
 ---------------
 Send Coupons Codes to email. Add this functionality provided email
+----------------
+Booking Pass (Section Title)
+    passName - Pass ID: Booking Pass #1
+    passValidity - Valid For: 1 Person (Adult/Child)
+    dateOfUse - Date of Use: April 17, 2024
+    bookedBy - Booked By [User Name]
+🔹 Property Details
+    propertyName - Property Name: [Hotel/Experience Name]
+    category - Category: [e.g. 3-Star Hotel / Adventure Tour / Heritage Stay]
+    location - Location: Delhi, India
+    logo - Logo: (Company/Brand logo image here)

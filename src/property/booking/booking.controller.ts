@@ -31,4 +31,18 @@ export class BookingController {
     ) {
         return this.bookingService.getMyBookings(req.user._id, req.user.role, { page, limit });
     }
+
+    @Get('verify-booking-pass')
+    async verifyBookingPass(
+        @Query('qrCode') qrCode: string
+    ){
+        return this.bookingService.verifyBookingPass(qrCode);
+    }
+
+    @Get('get-booking-pass')
+    async getBookingPass(
+        @Query('bookingId') bookingId: string,
+    ) {
+        return this.bookingService.getBookingPass(bookingId);
+    }
 }

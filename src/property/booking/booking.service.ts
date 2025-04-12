@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Role } from 'src/auth/role.enum';
@@ -6,6 +6,7 @@ import { CouponsService } from 'src/coupons/coupons.service';
 import {
   Booking,
   BookingDocument,
+  BookingPassType,
   BookingStatus,
 } from 'src/schemas/booking.schema';
 import { Coupon, CouponDocument } from 'src/schemas/coupons.schema';
@@ -21,6 +22,7 @@ import {
 } from 'src/schemas/property.schema';
 import { DiscountCalculatorService } from 'src/shared/discount-calculator.service';
 import { CreateBooking } from './booking.dto';
+import { Auth, AuthDocument } from 'src/schemas/auth.schema';
 
 @Injectable()
 export class BookingService {
@@ -31,6 +33,9 @@ export class BookingService {
     private readonly propertySchema: Model<PropertyDocument>,
     private discountCalculatorService: DiscountCalculatorService,
     private couponService: CouponsService,
+
+    @InjectModel(Auth.name)
+    private authModel: Model<AuthDocument>,
     // @InjectModel(PropertyType.name)
     // private readonly propertyTypeSchema: Model<PropertyTypeDocument>,
   ) {}
@@ -163,11 +168,113 @@ export class BookingService {
       throw new HttpException('Property Type is not active', 400);
     }
 
-    const bookingCreated = await this.bookingSchema.create(bookingData);
+    const obj:any = { ...bookingData }
+    const passes = await this.generateBookingPass(booking.propertyId, booking, userId)
+
+    obj.bookingPass = passes
+
+    const bookingCreated = await this.bookingSchema.create(obj);
     if (!bookingCreated) {
       throw new HttpException('Booking not created', 400);
     }
     return bookingCreated;
+  }
+
+  async generateBookingPass(propertyId:string, booking:CreateBooking, userId:string) {
+    const property = await this.propertySchema.findById(propertyId);
+    if (!property) {
+      throw new HttpException('Property not found', 404);
+    }
+
+    const user = await this.authModel.findById(userId);
+    if (!user) {
+      throw new HttpException('User not found', 404);
+    }
+
+    const passes:any[] = [];
+
+    let index = 1;
+    for(let x =0; x < booking.noOfPeople; x++){
+      const bookingPass = {
+        passType: BookingPassType.Single,
+        passName: `Booking Pass #${index}`,
+        passValidity: { 
+          noOfPeople: 1,
+          noOfChildren: 0,
+        },
+        // `${booking.noOfPeople || 1} Person(s)  ${booking.noOfChildren}(Child)`,
+        dateOfUse: new Date(booking.startDate),
+        bookedByName: user.name,
+        bookedBy: userId,
+        propertyDetails: {
+          propertyName: `${property.name || 'N/A'}`,
+          category: `${property.category || 'N/A'}`,
+          location: `${property.address.city + ', ' + property.address.state}`,
+          logo: `${property.logo || 'N/A'}`,
+        },
+        qrCode: this.generateQr()
+      };
+      passes.push(bookingPass);
+      index++
+    }
+
+    for(let x =0; x < booking.noOfChildren; x++){
+      const bookingPass = {
+        passType: BookingPassType.Single,
+        passName: `Booking Pass #${index}`,
+        passValidity: { 
+          noOfPeople: 0,
+          noOfChildren: 1,
+        },
+        // `${booking.noOfPeople || 1} Person(s)  ${booking.noOfChildren}(Child)`,
+        dateOfUse: new Date(booking.startDate),
+        bookedByName: user.name,
+        bookedBy: userId,
+        propertyDetails: {
+          propertyName: `${property.name || 'N/A'}`,
+          category: `${property.category || 'N/A'}`,
+          location: `${property.address.city + ', ' + property.address.state}`,
+          logo: `${property.logo || 'N/A'}`,
+        },
+        qrCode: this.generateQr()
+      };
+      passes.push(bookingPass);
+      index++
+    }
+
+    const bookingPassMulti = {
+      passType: BookingPassType.Multi,
+      passName: `Booking Pass 'Multi'`,
+      passValidity: { 
+        noOfPeople: booking.noOfPeople || 1,
+        noOfChildren: booking.noOfChildren || 0,
+      },
+      dateOfUse: new Date(booking.startDate),
+      bookedByName: user.name,
+      bookedBy: userId,
+      propertyDetails: {
+        propertyName: `${property.name || 'N/A'}`,
+        category: `${property.category || 'N/A'}`,
+        location: `${property.address.city + ', ' + property.address.state}`,
+        logo: `${property.logo || 'N/A'}`,
+      },
+      qrCode: this.generateQr()
+    };
+
+    passes.push(bookingPassMulti);
+
+    return passes
+  }
+
+  generateQr(length = 30) {
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let coupon = '';
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * chars.length);
+      coupon += chars[randomIndex];
+    }
+    return coupon;
   }
 
   async getMyBookings(
@@ -192,5 +299,24 @@ export class BookingService {
         .limit(limit)
         .lean();
     }
+  }
+
+  async verifyBookingPass(qrCode:string){
+    const result = await this.bookingSchema.findOne({ 'bookingPass.qrCode': qrCode }, { 'bookingPass.$': 1 });
+    if (!result) {
+      throw new HttpException("Pass not found", HttpStatus.BAD_REQUEST)
+    }
+    return result
+  }
+
+  async getBookingPass(
+    bookingId: string
+  ){
+    const booking = await this.bookingSchema.findById(bookingId, { bookingPass: 1 });
+    if (!booking) {
+      throw new HttpException("Booking not found", HttpStatus.BAD_REQUEST)
+    }
+
+    return  booking.bookingPass
   }
 }

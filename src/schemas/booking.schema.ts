@@ -23,6 +23,52 @@ export enum EntryType {
   CHECK_OUT = 'Check Out',
 }
 
+export enum BookingPassType {
+  Single = "Single",
+  Multi = "Multi",
+}
+
+@Schema()
+class PassValidity {
+  @Prop({ type: Number })
+  noOfPeople: number;
+
+  @Prop({ type: Number })
+  noOfChildren: number;
+}
+@Schema()
+class BookingPass {
+  @Prop({ type: String, enum: Object.values(BookingPassType) })
+  passType: BookingPassType;
+
+  @Prop({ type: String })
+  passName: string;
+
+  @Prop({ type: PassValidity })
+  passValidity: PassValidity;
+
+  @Prop({ type: Date })
+  dateOfUse: Date;
+
+  @Prop({ type: String, required: true })
+  bookedByName: string
+
+  @Prop({ type: mongoose.Types.ObjectId, ref: Auth.name })
+  bookedBy: mongoose.Types.ObjectId;
+
+  @Prop({ type: Object })
+  propertyDetails: {
+    propertyName: string;
+    category: string;
+    location: string;
+    logo: string;
+  };
+
+  @Prop({ type: String })
+  qrCode: string;
+}
+
+
 @Schema({ timestamps: true })
 export class Booking extends Document {
   @Prop({ required: true, type: Number })
@@ -82,6 +128,9 @@ export class Booking extends Document {
 
   @Prop({ type: Object })
   coupon: any;
+
+  @Prop({ type: [BookingPass], required: true })
+  bookingPass: BookingPass[];
 }
 
 export const BookingSchema = SchemaFactory.createForClass(Booking);
