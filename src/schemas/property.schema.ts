@@ -154,6 +154,9 @@ export class Property {
     contains: DiscountContains;
   }[];
 
+  @Prop({ type: String, required: false })
+  logo: string;
+
   @Prop({ type: { startDate: Date, endDate: Date } })
   availability: {
     startDate: Date;
