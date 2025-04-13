@@ -77,6 +77,9 @@ export class CreatePropertyDto {
   @IsString({ each: true })
   amenities: string[];
 
+  @IsString()
+  logo: string;
+
   @IsString({ each: true })
   @IsOptional()
   additionalAmenities: string[];
