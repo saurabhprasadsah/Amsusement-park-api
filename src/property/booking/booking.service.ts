@@ -312,11 +312,12 @@ export class BookingService {
   async getBookingPass(
     bookingId: string
   ){
-    const booking = await this.bookingSchema.findById(bookingId, { bookingPass: 1 });
+    const booking = await this.bookingSchema.findById(bookingId).populate('propertyId').lean();
     if (!booking) {
       throw new HttpException("Booking not found", HttpStatus.BAD_REQUEST)
     }
-
-    return  booking.bookingPass
+    return booking;
+    // const property = await this.propertySchema.findById(booking.propertyId).lean();
+    // return  { bookingPass: booking.bookingPass, propertyDetail: property} 
   }
 }
