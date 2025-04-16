@@ -297,6 +297,8 @@ export class BookingService {
       return this.bookingSchema
         .find({ hostedById: userId })
         .populate('propertyId')
+        .populate({ path: 'hostedById', select: 'name email phone' })
+        .populate({ path: 'bookedById', select: 'name email phone' })
         .skip(skip)
         .limit(limit)
         .lean();
