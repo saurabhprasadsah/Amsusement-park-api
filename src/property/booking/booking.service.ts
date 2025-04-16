@@ -288,12 +288,14 @@ export class BookingService {
       return this.bookingSchema
         .find({ bookedById: userId })
         .populate('propertyId')
+        .populate({ path: 'hostedById', select: 'name email phone' })
+        .populate({ path: 'bookedById', select: 'name email phone' })
         .skip(skip)
         .limit(limit)
         .lean();
     } else if (role === Role.Admin) {
       return this.bookingSchema
-        .find()
+        .find({ hostedById: userId })
         .populate('propertyId')
         .skip(skip)
         .limit(limit)
