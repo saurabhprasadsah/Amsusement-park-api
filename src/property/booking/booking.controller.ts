@@ -23,7 +23,7 @@ export class BookingController {
 
     @Get()
     @UseGuards(RolesGuard)
-    @Roles(Role.User)
+    @Roles(Role.User, Role.User)
     async getBookings(
         @Query('page') page: number,
         @Query('limit') limit: number,

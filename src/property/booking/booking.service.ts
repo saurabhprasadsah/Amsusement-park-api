@@ -293,7 +293,7 @@ export class BookingService {
         .skip(skip)
         .limit(limit)
         .lean();
-    } else if (role === Role.Admin) {
+    } else if (role === Role.Vendor) {
       return this.bookingSchema
         .find({ hostedById: userId })
         .populate('propertyId')
