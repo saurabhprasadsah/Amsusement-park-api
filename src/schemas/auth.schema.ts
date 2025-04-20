@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Role } from 'src/auth/role.enum';
+import { Property } from './property.schema';
 
 export enum Status {
   Active = 'Active',
@@ -109,6 +110,9 @@ export class Auth extends Document {
 
   @Prop({ type: [String], required: false, default: [] })
   propertyHistory: string[];
+
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], required: false, default: [], ref: Property.name })
+  wishlist: string[];
 }
 
 export const AuthSchema = SchemaFactory.createForClass(Auth);

@@ -30,6 +30,51 @@ export class PropertyController {
     private readonly propertyTypesService: PropertyService,
   ) {}
 
+  @Get('wishlist/add')
+  @UseGuards(RolesGuard)
+  @Roles(Role.User)
+  async addToWishlist(
+    @Query('propertyId') propertyId: string,
+    @Req() req:any
+  ){
+    const result = await this.propertyService.addProductInWishList(req.user._id, propertyId);
+    return { message: 'Added to wishlist', result, success: true };
+  }
+
+  @Get('wishlist')
+  @UseGuards(RolesGuard)
+  @Roles(Role.User)
+  async getWishlist(
+    @Req() req: any,
+  ) {
+    return this.propertyService.getWishList(
+      req.user._id,
+    );
+  }
+
+  @Get('wishlist/remove')
+  @UseGuards(RolesGuard)
+  @Roles(Role.User)
+  async removeFromWishlist(
+    @Query('propertyId') propertyId: string,
+    @Req() req: any,
+  ) {
+    const result = await this.propertyService.deleteFromWishList(
+      req.user._id,
+      propertyId,
+    );
+    return { message: 'Removed from wishlist', result, success: true };
+  }
+
+  @Get('wishlist/properties')
+  @UseGuards(RolesGuard)
+  @Roles(Role.User)
+  async getWishlistProperties(
+    @Req() req: any,
+  ){
+    return this.propertyService.getWishlistIds(req.user._id);
+  }
+
   @Get('property-pricing-types')
   getPropertyPricingTypes() {
     // i want o
@@ -261,4 +306,6 @@ export class PropertyController {
   async getPropertyById(@Param('id') id: string) {
     return this.propertyService.getPropertyById(id);
   }
+
+
 }

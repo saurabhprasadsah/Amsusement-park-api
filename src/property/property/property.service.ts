@@ -64,17 +64,17 @@ export class PropertyService {
       filter['propertyType'] = propertyType;
 
     const result = await this.propertySchema
-    .find(filter)
-    .skip((page - 1) * limit)
-    .limit(limit)
-    .lean();
-    
-    console.log("RESult", search);
+      .find(filter)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    console.log('RESult', search);
     return this.addDiscounts(result);
   }
 
   addDiscounts(result) {
-    console.log("RESULT", result);
+    console.log('RESULT', result);
     const mappedWithDiscount = result.map((property) => {
       const visiblePrice: any[] = [];
 
@@ -238,7 +238,7 @@ export class PropertyService {
       .lean();
 
     console.log(result);
-    return this.addDiscounts(result)
+    return this.addDiscounts(result);
   }
 
   async updateProperty(id: string, property, hostedById: string) {
@@ -285,7 +285,7 @@ export class PropertyService {
     return this.amenitySchema.insertMany(amenities);
   }
 
-  async calculatePricing(priceCalculation: any, userId: string, email:string) {
+  async calculatePricing(priceCalculation: any, userId: string, email: string) {
     const property = await this.propertySchema.findById(
       priceCalculation.propertyId,
     );
@@ -361,14 +361,16 @@ export class PropertyService {
         userId: userId,
         totalAmount,
         propertyId: property._id as string,
-        email: email
+        email: email,
       });
 
       if (coupon && coupon.success) {
         totalAmount -= coupon.coupon?.discountAmountFlat || 0;
         couponResult = `Coupon applied! You saved ₹${coupon.coupon?.discountAmountFlat}`;
-        offersSet.add(`Coupon applied! You saved ₹${coupon.coupon?.discountAmountFlat}`);
-        isCouponSuccess = true
+        offersSet.add(
+          `Coupon applied! You saved ₹${coupon.coupon?.discountAmountFlat}`,
+        );
+        isCouponSuccess = true;
       } else {
         couponResult = coupon.message;
         isCouponError = true;
@@ -386,5 +388,44 @@ export class PropertyService {
       isCouponError: isCouponError,
       couponResult,
     };
+  }
+
+  addProductInWishList(userId: string, productId: string) {
+    if (!productId) {
+      throw new HttpException('Product ID cannot be null or undefined', 400);
+    }
+    return this.authSchema
+      .findByIdAndUpdate(
+        userId,
+        { $addToSet: { wishlist: { $each: [productId] } } },
+        { new: true },
+      )
+      .select('name email wishlist');
+  }
+
+  async getWishList(userId: string) {
+    const result = await this.authSchema
+      .findById(userId)
+      .select('wishlist')
+      .populate('wishlist')
+      .lean();
+
+    return result;
+  }
+
+  deleteFromWishList(userId: string, productId: string) {
+    return this.authSchema.findByIdAndUpdate(
+      userId,
+      { $pull: { wishlist: productId } },
+      { new: true },
+    ).select('name email wishlist').populate('wishlist');
+  }
+
+
+  getWishlistIds(userId: string) {
+    return this.authSchema
+      .findById(userId)
+      .select('wishlist')
+      .lean()
   }
 }
