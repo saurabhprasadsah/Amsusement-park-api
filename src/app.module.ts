@@ -54,6 +54,7 @@ import { CouponsModule } from './coupons/coupons.module';
     FileUploadModule,
     PaymentModule,
     CouponsModule,
+    ReviewsModule
   ],
   controllers: [AppController],
   providers: [AppService, MailService],

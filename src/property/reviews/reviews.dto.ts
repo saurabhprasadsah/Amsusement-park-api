@@ -1,11 +1,8 @@
 import { IsString, IsNumber, IsOptional, IsUUID, Max, Min, Length } from 'class-validator';
 
 export class CreateReviewDto {
-    @IsUUID()
+    @IsString()
     propertyId: string;
-
-    @IsUUID()
-    ratedBy: string;
 
     @IsNumber()
     @Min(1)

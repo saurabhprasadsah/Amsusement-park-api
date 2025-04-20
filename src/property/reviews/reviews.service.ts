@@ -10,10 +10,11 @@ export class ReviewsService {
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
   ) {}
 
-  async addReview(body: CreateReviewDto) {
-    const newReview = new this.reviewModel(body);
+  async addReview(body: CreateReviewDto, userId:string) {
+    console.log('userId', userId);
+    const newReview = new this.reviewModel({...body, ratedBy: userId});
     await newReview.save();
-    return { success: true, message: "Review added successfully", data: newReview };
+    return newReview 
   }
 
   async getReviewsByProductId(propertyId: string): Promise<Review[]> {
