@@ -8,6 +8,7 @@ import {
   BookingDocument,
   BookingPassType,
   BookingStatus,
+  PaymentStatus,
 } from 'src/schemas/booking.schema';
 import { Coupon, CouponDocument } from 'src/schemas/coupons.schema';
 import {
@@ -158,6 +159,7 @@ export class BookingService {
       hostedById: property.hostedById,
       bookedById: userId,
       coupon: couponResult,
+      paymentInfo: { paymentStatus: PaymentStatus.PENDING }
     };
 
     if (couponResult) {

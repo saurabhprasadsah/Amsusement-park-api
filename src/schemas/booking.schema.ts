@@ -4,12 +4,8 @@ import { Property } from './property.schema';
 import { Auth } from './auth.schema';
 
 export enum BookingStatus {
+  SUCCESS = 'Confirmed',
   PENDING = 'Pending',
-  CONFIRMED = 'Confirmed',
-  CANCELLED = 'Cancelled',
-  EXPIRED = 'Expired',
-  REJECTED = 'Rejected',
-  REFUNDED = 'Refunded',
 }
 
 export enum PaymentStatus {

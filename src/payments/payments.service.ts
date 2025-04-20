@@ -116,9 +116,12 @@ export class PaymentService {
         await this.bookingModel.findByIdAndUpdate(
           bookingId,
           {
-            paymentStatus: PaymentStatus.SUCCESS,
-            paymentId: payment._id,
-            razorpayPaymentId,
+            paymentAmount: (payment.amount)/100,
+            paymentInfo: {
+              paymentStatus: PaymentStatus.SUCCESS,
+              paymentId: payment._id,
+              razorpayPaymentId,
+            }
           },
           { new: true },
         );
