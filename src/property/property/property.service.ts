@@ -414,18 +414,30 @@ export class PropertyService {
   }
 
   deleteFromWishList(userId: string, productId: string) {
-    return this.authSchema.findByIdAndUpdate(
-      userId,
-      { $pull: { wishlist: productId } },
-      { new: true },
-    ).select('name email wishlist').populate('wishlist');
+    return this.authSchema
+      .findByIdAndUpdate(
+        userId,
+        { $pull: { wishlist: productId } },
+        { new: true },
+      )
+      .select('name email wishlist')
+      .populate('wishlist');
   }
 
-
   getWishlistIds(userId: string) {
-    return this.authSchema
+    return this.authSchema.findById(userId).select('wishlist').lean();
+  }
+
+  async getWishlistProperty(userId: string, propertyId: string) {
+    const items = await this.authSchema
       .findById(userId)
       .select('wishlist')
-      .lean()
+      .lean();
+    const isAvailable = items?.wishlist.find((item) => {
+      if (item.toString() === propertyId) {
+        return item;
+      }
+    });
+    return { isAvailable: !!isAvailable };
   }
 }

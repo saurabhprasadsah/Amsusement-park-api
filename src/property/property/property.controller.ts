@@ -66,6 +66,19 @@ export class PropertyController {
     return { message: 'Removed from wishlist', result, success: true };
   }
 
+  @Get('wishlist/property')
+  @UseGuards(RolesGuard)
+  @Roles(Role.User)
+  async getWishlistProperty(
+    @Query('propertyId') propertyId: string,
+    @Req() req: any,
+  ) {
+    return this.propertyService.getWishlistProperty(
+      req.user._id,
+      propertyId,
+    );
+  }
+  
   @Get('wishlist/properties')
   @UseGuards(RolesGuard)
   @Roles(Role.User)
