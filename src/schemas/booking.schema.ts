@@ -118,12 +118,15 @@ export class Booking extends Document {
   @Prop({
     type: String,
     enum: Object.values(BookingStatus),
-    default: BookingStatus.PENDING,
+    default: BookingStatus.SUCCESS,
   })
   bookingStatus: BookingStatus;
 
   @Prop({ type: Object })
   coupon: any;
+
+  @Prop({ type: String, required: false })
+  paymentId?:string
 
   @Prop({ type: [BookingPass], required: true })
   bookingPass: BookingPass[];

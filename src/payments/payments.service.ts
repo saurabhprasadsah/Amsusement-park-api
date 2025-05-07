@@ -45,14 +45,16 @@ export class PaymentService {
         },
       });
 
-      await this.bookingModel.findByIdAndUpdate(
+      const paymentStatus = await this.bookingModel.findByIdAndUpdate(
         bookingId,
         {
-          paymentStatus: PaymentStatus.PENDING,
+          bookingStatus: PaymentStatus.PENDING,
           paymentId: order.id,
         },
         { new: true },
       );
+
+      console.log("PAYMENT STATUS", paymentStatus);
       return {...order, razorPayId: RAZORPAY_KEY_ID};
 
     } catch (error) {
@@ -116,7 +118,7 @@ export class PaymentService {
         await this.bookingModel.findByIdAndUpdate(
           bookingId,
           {
-            paymentAmount: (payment.amount)/100,
+            paidAmount: (payment.amount),
             paymentInfo: {
               paymentStatus: PaymentStatus.SUCCESS,
               paymentId: payment._id,
