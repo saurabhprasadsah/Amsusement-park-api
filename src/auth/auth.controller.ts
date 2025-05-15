@@ -84,3 +84,9 @@ export class AuthController {
     return this.authService.logHistory(propertyId, req.user._id);
   }
 }
+
+
+@Post('reset-password')
+async resetPassword(@Body() dto: ResetPasswordDto) {
+  return this.authService.changePassword(dto);
+}

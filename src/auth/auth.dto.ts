@@ -123,3 +123,10 @@ export class VerifyAccountOtpDto {
   @Min(7)
   otp:string
 }
+
+
+export class ResetPasswordDto {
+  email: string;
+  newPassword: string;
+  token: string;
+}

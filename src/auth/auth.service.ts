@@ -20,7 +20,8 @@ import {
 import { ChangePasswordDto, SignupDto } from './auth.dto';
 import { Role } from './role.enum';
 import { MailService } from 'src/shared/mail.service';
-import { v4 as uuid } from 'uuid'
+import { v4 as uuid } from 'uuid';
+import { City } from 'src/schemas/cities.schema';
 require('dotenv').config();
 
 @Injectable()
@@ -39,6 +40,7 @@ export class AuthService {
       }
       const salt = await bcrypt.genSalt(15);
       userDto.password = await bcrypt.hash(userDto.password, salt);
+      userDto.city = City;
       userDto.role = role;
       userDto.status = Status.Active;
       await this.authModel.create(userDto);

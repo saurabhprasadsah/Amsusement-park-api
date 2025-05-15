@@ -27,6 +27,9 @@ export class Auth extends Document {
   @Prop({ type: String, required: true, unique: true })
   email: string;
 
+  // @Prop({ type: String, required: true, unique: true })
+  // city: string;
+
   @Prop({ type: Number, required: true })
   phone: number;
 
